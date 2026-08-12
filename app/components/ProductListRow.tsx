@@ -26,11 +26,11 @@ export function ProductListRow({product}: {product: ProductListItem}) {
   return (
     <tr className="product-list-row">
       <td className="product-list-name-cell">
-        <Link to={`/products/${product.handle}`} className="product-list-link">
+        <Link to={`/products-shopify/${product.handle}`} className="product-list-link">
           {product.title}
         </Link>
-        <Link to={`/products-shopify/${product.handle}`} className="product-list-link product-list-link-shopify">
-          Shopify
+        <Link to={`/products/${product.handle}`} className="product-list-link product-list-link-shopify">
+          Custom
         </Link>
       </td>
       <td className="product-list-sku-cell">{firstSku}</td>
