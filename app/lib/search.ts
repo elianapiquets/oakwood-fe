@@ -1,4 +1,4 @@
-import {BACKEND_URL} from '~/lib/backend';
+import {BACKEND_URL, BACKEND_HEADERS} from '~/lib/backend';
 import type {BackendProduct} from '~/lib/backend';
 
 export type SearchResult = {
@@ -13,7 +13,7 @@ export async function searchBackend(
   limit = 10,
 ): Promise<BackendProduct[]> {
   if (!q.trim()) return [];
-  return fetch(`${BACKEND_URL}/api/search?q=${encodeURIComponent(q)}&limit=${limit}`)
+  return fetch(`${BACKEND_URL}/api/search?q=${encodeURIComponent(q)}&limit=${limit}`, {headers: BACKEND_HEADERS})
     .then((r) => (r.ok ? r.json() : []))
     .catch(() => []);
 }

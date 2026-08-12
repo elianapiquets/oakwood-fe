@@ -12,6 +12,7 @@ build/
 # environment variables
 .env
 .env.local
+.env.production
 .env.development.local
 .env.test.local
 .env.production.local
@@ -25,6 +26,7 @@ tsconfig.tsbuildinfo
 .DS_Store
 *.pem
 .idea
-
 .shopify
+
+# .shopify intentionally tracked — project.json links this repo to the Oxygen storefront
 .react-router

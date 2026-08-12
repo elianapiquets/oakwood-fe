@@ -10,7 +10,10 @@ export default defineConfig(({mode}) => {
   return {
   define: {
     'process.env.BACKEND_URL': JSON.stringify(
-      env.BACKEND_URL ?? 'http://localhost:3100',
+      process.env.BACKEND_URL ?? env.BACKEND_URL ?? 'http://localhost:3100',
+    ),
+    'process.env.BACKEND_API_KEY': JSON.stringify(
+      process.env.BACKEND_API_KEY ?? env.BACKEND_API_KEY ?? '',
     ),
   },
   plugins: [tailwindcss(), hydrogen(), oxygen(), reactRouter()],
