@@ -1,11 +1,18 @@
 import {fileURLToPath} from 'node:url';
-import {defineConfig} from 'vite';
+import {defineConfig, loadEnv} from 'vite';
 import {hydrogen} from '@shopify/hydrogen/vite';
 import {oxygen} from '@shopify/mini-oxygen/vite';
 import {reactRouter} from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 
-export default defineConfig({
+export default defineConfig(({mode}) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  return {
+  define: {
+    'process.env.BACKEND_URL': JSON.stringify(
+      env.BACKEND_URL ?? 'http://localhost:3100',
+    ),
+  },
   plugins: [tailwindcss(), hydrogen(), oxygen(), reactRouter()],
   resolve: {
     alias: {
@@ -42,4 +49,5 @@ export default defineConfig({
   server: {
     allowedHosts: ['.tryhydrogen.dev', '.trycloudflare.com'],
   },
+  };
 });
