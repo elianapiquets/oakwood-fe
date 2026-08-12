@@ -25,3 +25,5 @@ tsconfig.tsbuildinfo
 .DS_Store
 *.pem
 .idea
+
+.shopify
