@@ -39,3 +39,5 @@ jobs:
         run: npx shopify hydrogen deploy
         env:
           SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000168295 }}
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          BACKEND_API_KEY: ${{ secrets.BACKEND_API_KEY }}
