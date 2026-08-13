@@ -4,6 +4,7 @@ import {hydrogen} from '@shopify/hydrogen/vite';
 import {oxygen} from '@shopify/mini-oxygen/vite';
 import {reactRouter} from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
+import svgr from 'vite-plugin-svgr';
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -16,7 +17,7 @@ export default defineConfig(({mode}) => {
       process.env.BACKEND_API_KEY ?? env.BACKEND_API_KEY ?? '',
     ),
   },
-  plugins: [tailwindcss(), hydrogen(), oxygen(), reactRouter()],
+  plugins: [svgr(), tailwindcss(), hydrogen(), oxygen(), reactRouter()],
   resolve: {
     alias: {
       // Vite's native tsconfig path resolver does not cover JavaScript
