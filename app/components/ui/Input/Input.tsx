@@ -20,7 +20,7 @@ import {
   INPUT_ANTD_SUFFIX_CLASSNAMES,
   INPUT_ANTD_PREFIX_CLASSNAMES,
 } from '../InputWrapper';
-import { Icon } from '../icons';
+import { Eye, EyeOff } from 'lucide-react';
 
 type InputProps<TFieldValues extends FieldValues> = AntdInputProps &
   InputBaseProps<TFieldValues>;
@@ -152,11 +152,11 @@ const Input = <TFieldValues extends FieldValues>(
           }}
           iconRender={(visible) => (
             <div className={'flex items-center justify-center w-5 h-5'}>
-              <Icon
-                iconName={visible ? 'iconEye' : 'iconEyeClosed'}
-                width={20}
-                className={'text-primary/30'}
-              />
+              {visible ? (
+                <Eye size={20} className={'text-primary/30'} />
+              ) : (
+                <EyeOff size={20} className={'text-primary/30'} />
+              )}
             </div>
           )}
           suffix={suffix}

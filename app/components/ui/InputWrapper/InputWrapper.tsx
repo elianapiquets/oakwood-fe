@@ -2,7 +2,7 @@ import type { InputWrapperProps } from './types';
 
 import clsx from 'clsx';
 
-import { Icon } from '../icons';
+import { Lock } from 'lucide-react';
 
 const InputWrapper = ({
   children,
@@ -25,8 +25,6 @@ const InputWrapper = ({
   </div>
 );
 
-const InputLockSuffix = (
-  <Icon iconName={'iconLock'} width={16} className={'text-primary/20'} />
-);
+const InputLockSuffix = <Lock size={16} className={'text-primary/20'} />;
 
 export { InputWrapper, InputLockSuffix };

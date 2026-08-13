@@ -14,7 +14,7 @@ import {
   INPUT_DISABLED_CLASSNAMES,
   InputWrapper,
 } from '../InputWrapper';
-import { Icon } from '../icons';
+import { ChevronDown } from 'lucide-react';
 
 type SelectProps<TFieldValues extends FieldValues> = AntdSelectProps & {
   id?: string;
@@ -119,9 +119,8 @@ const Select = <TFieldValues extends FieldValues>(
         defaultValue={defaultValue}
         suffixIcon={
           suffix ?? (
-            <Icon
-              iconName={'iconCaretDown'}
-              width={20}
+            <ChevronDown
+              size={20}
               className={clsx('transition-transform duration-200 mt-0.5', {
                 'text-primary': !disabled,
                 'text-inactive': disabled,
