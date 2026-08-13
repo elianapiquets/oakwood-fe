@@ -1,124 +1,241 @@
-import {useState} from 'react';
-import {useLoaderData} from 'react-router';
+import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/products.$handle';
-import {fetchProductByHandle} from '~/lib/backend';
-import {AddToCartButton} from '~/components/AddToCartButton';
-import {useAside} from '~/components/Aside';
+import {
+  getSelectedProductOptions,
+  Analytics,
+  useOptimisticVariant,
+  getProductOptions,
+  getAdjacentAndFirstAvailableVariants,
+  useSelectedOptionInUrlParam,
+} from '@shopify/hydrogen';
+import {ProductPrice} from '~/components/ProductPrice';
+import {ProductImage} from '~/components/ProductImage';
+import {ProductForm} from '~/components/ProductForm';
 import {ChemistryPanel} from '~/components/ChemistryPanel';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {fetchProductByHandle} from '~/lib/backend';
 
 export const meta: Route.MetaFunction = ({data}) => {
+  const description =
+    data?.product.seo?.description ??
+    data?.product.description?.substring(0, 160) ??
+    null;
+  const price = data?.product.selectedOrFirstAvailableVariant?.price;
+
   return [
-    {title: `Oakwood Chemical | ${data?.product.title ?? ''}`},
+    {title: data?.product.seo?.title ?? `Oakwood Chemical | ${data?.product.title ?? ''}`},
     {rel: 'canonical', href: `/products/${data?.product.handle}`},
+    ...(description ? [{name: 'description', content: description}] : []),
+    {
+      'script:ld+json': {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: data?.product.title,
+        description: data?.product.description,
+        offers: {
+          '@type': 'Offer',
+          price: price?.amount,
+          priceCurrency: price?.currencyCode ?? 'USD',
+        },
+      },
+    },
   ];
 };
 
-export async function loader({params, request}: Route.LoaderArgs) {
+export async function loader({context, params, request}: Route.LoaderArgs) {
   const {handle} = params;
+  const {storefront} = context;
+
   if (!handle) throw new Error('Expected product handle to be defined');
 
-  const product = await fetchProductByHandle(handle);
-  if (!product) throw new Response(null, {status: 404});
+  const [{product}, backendProduct] = await Promise.all([
+    storefront.query(PRODUCT_QUERY, {
+      variables: {handle, selectedOptions: getSelectedProductOptions(request)},
+    }),
+    fetchProductByHandle(handle),
+  ]);
+
+  if (!product?.id) {
+    const redirectData = await storefront
+      .query(URL_REDIRECTS_QUERY, {
+        variables: {query: `path:/products/${handle}`},
+        cache: storefront.CacheShort(),
+      })
+      .catch(() => null);
+    const target = (redirectData as any)?.urlRedirects?.nodes?.[0]?.target as
+      | string
+      | undefined;
+    if (target) {
+      const path = target.startsWith('http') ? new URL(target).pathname : target;
+      throw redirect(path, 301);
+    }
+    throw new Response(null, {status: 404});
+  }
 
   redirectIfHandleIsLocalized(request, {handle, data: product});
 
-  return {product};
+  return {product, chemistry: backendProduct?.chemistry ?? null};
 }
 
 export default function Product() {
-  const {product} = useLoaderData<typeof loader>();
-  const {open} = useAside();
+  const {product, chemistry} = useLoaderData<typeof loader>();
 
-  const firstVariant = product.variants[0];
-  const initialOptions = Object.fromEntries(
-    (firstVariant?.selectedOptions ?? []).map(({name, value}) => [name, value]),
+  const selectedVariant = useOptimisticVariant(
+    product.selectedOrFirstAvailableVariant,
+    getAdjacentAndFirstAvailableVariants(product),
   );
 
-  const [selectedOptions, setSelectedOptions] =
-    useState<Record<string, string>>(initialOptions);
+  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
 
-  const selectedVariant =
-    product.variants.find((v) =>
-      v.selectedOptions.every((o) => selectedOptions[o.name] === o.value),
-    ) ?? firstVariant;
+  const productOptions = getProductOptions({
+    ...product,
+    selectedOrFirstAvailableVariant: selectedVariant,
+  });
+
+  const {title, descriptionHtml} = product;
 
   return (
     <div className="product">
-      {product.featuredImage && (
-        <img
-          src={product.featuredImage.url}
-          alt={product.featuredImage.altText ?? product.title}
-          width={product.featuredImage.width ?? undefined}
-          height={product.featuredImage.height ?? undefined}
-          className="product-image"
-        />
-      )}
+      <ProductImage image={selectedVariant?.image} />
       <div className="product-main">
-        <h1>{product.title}</h1>
-        {selectedVariant?.price && (
-          <p className="product-price">
-            ${parseFloat(selectedVariant.price).toFixed(2)}
-          </p>
-        )}
+        <h1>{title}</h1>
+        <ProductPrice
+          price={selectedVariant?.price}
+          compareAtPrice={selectedVariant?.compareAtPrice}
+        />
         <br />
-        <div className="product-form">
-          {product.options.map((option) => {
-            if (option.values.length <= 1) return null;
-            return (
-              <div className="product-options" key={option.name}>
-                <h5>{option.name}</h5>
-                <div className="product-options-grid">
-                  {option.values.map((value) => {
-                    const isSelected = selectedOptions[option.name] === value;
-                    return (
-                      <button
-                        key={value}
-                        type="button"
-                        className={`product-options-item${!isSelected ? ' link' : ''}`}
-                        style={{
-                          border: isSelected
-                            ? '1px solid black'
-                            : '1px solid transparent',
-                        }}
-                        onClick={() =>
-                          setSelectedOptions((prev) => ({
-                            ...prev,
-                            [option.name]: value,
-                          }))
-                        }
-                      >
-                        {value}
-                      </button>
-                    );
-                  })}
-                </div>
-                <br />
-              </div>
-            );
-          })}
-          <AddToCartButton
-            disabled={!selectedVariant?.availableForSale}
-            onClick={() => open('cart')}
-            lines={
-              selectedVariant
-                ? [{merchandiseId: selectedVariant.id, quantity: 1}]
-                : []
-            }
-          >
-            {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
-          </AddToCartButton>
-        </div>
+        <ProductForm
+          productOptions={productOptions}
+          selectedVariant={selectedVariant}
+        />
         <br />
         <br />
         <p>
           <strong>Description</strong>
         </p>
         <br />
-        <div dangerouslySetInnerHTML={{__html: product.descriptionHtml}} />
+        <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
         <br />
-        <ChemistryPanel data={product.chemistry} />
+        {chemistry && <ChemistryPanel data={chemistry} />}
       </div>
+      <Analytics.ProductView
+        data={{
+          products: [
+            {
+              id: product.id,
+              title: product.title,
+              price: selectedVariant?.price.amount || '0',
+              vendor: product.vendor,
+              variantId: selectedVariant?.id || '',
+              variantTitle: selectedVariant?.title || '',
+              quantity: 1,
+            },
+          ],
+        }}
+      />
     </div>
   );
 }
+
+const PRODUCT_VARIANT_FRAGMENT = `#graphql
+  fragment ProductVariantShopify on ProductVariant {
+    availableForSale
+    compareAtPrice {
+      amount
+      currencyCode
+    }
+    id
+    image {
+      __typename
+      id
+      url
+      altText
+      width
+      height
+    }
+    price {
+      amount
+      currencyCode
+    }
+    product {
+      title
+      handle
+    }
+    selectedOptions {
+      name
+      value
+    }
+    sku
+    title
+    unitPrice {
+      amount
+      currencyCode
+    }
+  }
+` as const;
+
+const PRODUCT_FRAGMENT = `#graphql
+  fragment ProductShopify on Product {
+    id
+    title
+    vendor
+    handle
+    descriptionHtml
+    description
+    encodedVariantExistence
+    encodedVariantAvailability
+    options {
+      name
+      optionValues {
+        name
+        firstSelectableVariant {
+          ...ProductVariantShopify
+        }
+        swatch {
+          color
+          image {
+            previewImage {
+              url
+            }
+          }
+        }
+      }
+    }
+    selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
+      ...ProductVariantShopify
+    }
+    adjacentVariants(selectedOptions: $selectedOptions) {
+      ...ProductVariantShopify
+    }
+    seo {
+      description
+      title
+    }
+  }
+  ${PRODUCT_VARIANT_FRAGMENT}
+` as const;
+
+const PRODUCT_QUERY = `#graphql
+  query ProductShopify(
+    $country: CountryCode
+    $handle: String!
+    $language: LanguageCode
+    $selectedOptions: [SelectedOptionInput!]!
+  ) @inContext(country: $country, language: $language) {
+    product(handle: $handle) {
+      ...ProductShopify
+    }
+  }
+  ${PRODUCT_FRAGMENT}
+` as const;
+
+const URL_REDIRECTS_QUERY = `#graphql
+  query UrlRedirects($query: String!) {
+    urlRedirects(first: 1, query: $query) {
+      nodes {
+        path
+        target
+      }
+    }
+  }
+` as const;

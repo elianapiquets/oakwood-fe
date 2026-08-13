@@ -6,7 +6,10 @@ import {fetchCollection} from '~/lib/backend';
 import type {BackendProduct} from '~/lib/backend';
 
 export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Oakwood Chemical | ${data?.collection.title ?? ''}`}];
+  return [
+    {title: `Oakwood Chemical | ${data?.collection.title ?? ''}`},
+    {rel: 'canonical', href: `/collections/${data?.collection.handle}`},
+  ];
 };
 
 export async function loader({params}: Route.LoaderArgs) {

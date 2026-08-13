@@ -1,5 +1,12 @@
 import {Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/policies._index';
+
+export const meta: Route.MetaFunction = () => {
+  return [
+    {title: 'Oakwood Chemical | Policies'},
+    {rel: 'canonical', href: '/policies'},
+  ];
+};
 import type {PoliciesQuery, PolicyItemFragment} from 'storefrontapi.generated';
 
 export async function loader({context}: Route.LoaderArgs) {

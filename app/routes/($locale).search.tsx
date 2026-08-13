@@ -5,7 +5,10 @@ import {SearchResults} from '~/components/SearchResults';
 import {searchBackend, type SearchResult} from '~/lib/search';
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Oakwood Chemical | Search'}];
+  return [
+    {title: 'Oakwood Chemical | Search'},
+    {rel: 'canonical', href: '/search'},
+  ];
 };
 
 export async function loader({request}: Route.LoaderArgs): Promise<SearchResult> {

@@ -2,6 +2,13 @@ import {useLoaderData, Link} from 'react-router';
 import type {Route} from './+types/collections._index';
 import {fetchCollections} from '~/lib/backend';
 
+export const meta: Route.MetaFunction = () => {
+  return [
+    {title: 'Oakwood Chemical | Collections'},
+    {rel: 'canonical', href: '/collections'},
+  ];
+};
+
 export async function loader(_args: Route.LoaderArgs) {
   const collections = await fetchCollections();
   return {collections};
