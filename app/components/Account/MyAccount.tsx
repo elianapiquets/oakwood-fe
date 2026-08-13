@@ -1,3 +1,8 @@
+import {lazy, Suspense} from 'react';
+
+const UserInformation = lazy(() =>
+  import('./UserInformation').then((m) => ({default: m.UserInformation})),
+);
 
 type CustomerAddress = {
   id: string;
@@ -28,36 +33,19 @@ type MyAccountProps = {
   customer?: Customer | null;
 };
 
-function MyAccount({ customer }: MyAccountProps) {
+function MyAccount({customer}: MyAccountProps) {
   const email = customer?.emailAddress?.emailAddress ?? '';
 
   return (
     <div>
-      <div className="bg-[#1e3a5f] rounded-lg px-6 py-5 flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-white text-2xl font-bold leading-tight">My Account</h1>
-          <div className="text-white/50 text-sm mt-0.5">{email}</div>
-        </div>
-        <button
-          type="button"
-          className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-4 py-2.5 rounded-md transition-colors whitespace-nowrap"
-        >
-          Edit Account Info
-        </button>
+      <div className="bg-[#1e3a5f] rounded-lg px-6 py-5 mb-4">
+        <h1 className="text-white text-2xl font-bold leading-tight !my-2">My Account</h1>
+        <div className="text-white/50 text-sm mt-0.5">{email}</div>
       </div>
 
-      <div className="bg-blue-50 border border-blue-100 rounded-lg px-5 py-4 text-[#1e3a5f] text-sm space-y-2.5">
-        <div>
-          If you are an existing customer, please contact us to set up your online account.
-        </div>
-        <div>
-          {'If you are a new customer, please complete the '}
-          <a href="/pages/account-application" className="underline font-medium">
-            Account Application
-          </a>
-          {' and complete customer registration. You may be contacted for further information before your order will be processed.'}
-        </div>
-      </div>
+      <Suspense fallback={null}>
+        <UserInformation customer={customer} />
+      </Suspense>
     </div>
   );
 }

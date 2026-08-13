@@ -1,7 +1,7 @@
 import type { HandledFormElementProps } from './types';
 import type { FieldValues } from 'react-hook-form';
 
-import { memo } from 'react';
+import { memo, forwardRef } from 'react';
 import type { FC } from 'react';
 
 /**
@@ -18,9 +18,11 @@ const createHandledFormElement = <
 ) => {
   type Props = Parameters<Component>[0] & HandledFormElementProps<SchemaType>;
 
-  const MemoizedComponent = memo((props: Props) => (
-    <WrappedComponent {...props} />
-  ));
+  const MemoizedComponent = memo(
+    forwardRef<unknown, Props>((props, ref) => (
+      <WrappedComponent {...props} ref={ref} />
+    )),
+  );
 
   MemoizedComponent.displayName = `Handled(${
     WrappedComponent.displayName || WrappedComponent.name || 'Component'

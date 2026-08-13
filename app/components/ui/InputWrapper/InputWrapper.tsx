@@ -10,7 +10,7 @@ const InputWrapper = ({
   isFloating,
   className,
 }: InputWrapperProps) => (
-  <div className={clsx('relative', className)}>
+  <div className={clsx('relative w-full', className)}>
     {placeholder && (
       <span
         className={clsx(
