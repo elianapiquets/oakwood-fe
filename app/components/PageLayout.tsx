@@ -45,7 +45,7 @@ export function PageLayout({
           customerName={customerName}
         />
       )}
-      <main>{children}</main>
+      <main className={'min-h-[calc(100vh-338px)]'}>{children}</main>
       <Footer
         footer={footer}
         header={header}

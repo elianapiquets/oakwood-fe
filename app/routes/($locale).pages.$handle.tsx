@@ -1,3 +1,4 @@
+import {useState} from 'react';
 import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/pages.$handle';
 
@@ -44,9 +45,8 @@ export default function Page() {
   const {page} = useLoaderData<typeof loader>();
 
   switch (page.handle) {
-    // Add cases here as you create page-specific layouts, e.g.:
-    // case 'contact': return <ContactPage page={page} />;
-    // case 'about': return <AboutPage page={page} />;
+    case 'faq':
+      return <FaqPage page={page} />;
     default:
       return (
         <div className="page">
@@ -57,6 +57,51 @@ export default function Page() {
         </div>
       );
   }
+}
+
+function parseQA(html: string) {
+  const items: {question: string; answer: string}[] = [];
+  const parts = html.split(/<h2[^>]*>/i).filter(Boolean);
+  for (const part of parts) {
+    const closeIdx = part.search(/<\/h2>/i);
+    if (closeIdx === -1) continue;
+    const question = part.slice(0, closeIdx).replace(/<[^>]+>/g, '').trim();
+    const answer = part.slice(closeIdx + 5).trim();
+    if (question) items.push({question, answer});
+  }
+  return items;
+}
+
+function FaqPage({page}: {page: {title: string; body: string}}) {
+  const items = parseQA(page.body);
+  const [open, setOpen] = useState<number | null>(null);
+
+  return (
+    <div className="max-w-3xl mx-auto px-6 py-10">
+      <h1 className="text-2xl font-bold text-navy mb-8">{page.title}</h1>
+      <div className="border-t border-gray-200">
+        {items.map((item, i) => (
+          <div key={i} className="border-b border-gray-200">
+            <button
+              type="button"
+              className="w-full text-left py-4 flex items-center justify-between gap-4 font-medium text-navy hover:text-teal cursor-pointer bg-transparent"
+              style={{border: 'none'}}
+              onClick={() => setOpen(open === i ? null : i)}
+            >
+              <span>{item.question}</span>
+              <span className="text-xl flex-shrink-0 text-teal">{open === i ? '−' : '+'}</span>
+            </button>
+            {open === i && (
+              <div
+                className="pb-5 text-gray-600 text-sm leading-relaxed"
+                dangerouslySetInnerHTML={{__html: item.answer}}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 const PAGE_QUERY = `#graphql

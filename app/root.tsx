@@ -130,7 +130,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 
   const footer = storefront
     .query(FOOTER_QUERY, {
-      cache: storefront.CacheLong(),
+      cache: storefront.CacheNone(),
       variables: {
         footerMenuHandle: 'footer',
       },
