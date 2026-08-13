@@ -2,7 +2,7 @@ import {useLoaderData, data} from 'react-router';
 import type {Route} from './+types/account._index';
 import {MyAccount} from '~/components/Account/MyAccount';
 
-const CURRENT_ADDRESS_QUERY = `#graphql
+const CURRENT_ADDRESS_QUERY = `#graphql-customer-account
   query CurrentAddress {
     customer {
       defaultAddress {
@@ -20,7 +20,7 @@ const CURRENT_ADDRESS_QUERY = `#graphql
   }
 ` as const;
 
-const UPDATE_ADDRESS_MUTATION = `#graphql
+const UPDATE_ADDRESS_MUTATION = `#graphql-customer-account
   mutation UpdateAddress($addressId: ID!, $address: CustomerAddressInput!) {
     customerAddressUpdate(addressId: $addressId, address: $address) {
       customerAddress { id }
@@ -29,7 +29,7 @@ const UPDATE_ADDRESS_MUTATION = `#graphql
   }
 ` as const;
 
-const UPDATE_CUSTOMER_MUTATION = `#graphql
+const UPDATE_CUSTOMER_MUTATION = `#graphql-customer-account
   mutation UpdateCustomer($input: CustomerUpdateInput!) {
     customerUpdate(input: $input) {
       customer { firstName lastName }
