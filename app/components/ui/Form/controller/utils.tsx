@@ -19,8 +19,8 @@ const createHandledFormElement = <
   type Props = Parameters<Component>[0] & HandledFormElementProps<SchemaType>;
 
   const MemoizedComponent = memo(
-    forwardRef<unknown, Props>((props, ref) => (
-      <WrappedComponent {...props} ref={ref} />
+    forwardRef<unknown, Props>((props, _ref) => (
+      <WrappedComponent {...props} />
     )),
   );
 

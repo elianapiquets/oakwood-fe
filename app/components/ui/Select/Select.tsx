@@ -1,4 +1,4 @@
-'use client';
+
 
 import type { SelectProps as AntdSelectProps } from 'antd';
 import type { FieldValues, Path } from 'react-hook-form';

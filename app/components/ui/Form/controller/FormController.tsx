@@ -1,4 +1,4 @@
-'use client';
+
 
 import type { FormControllerProps, RequiredSchema } from './types';
 import type { Path } from 'react-hook-form';

@@ -1,4 +1,4 @@
-'use client';
+
 
 import type { InputBaseProps } from '../InputWrapper';
 import type { InputProps as AntdInputProps } from 'antd';
