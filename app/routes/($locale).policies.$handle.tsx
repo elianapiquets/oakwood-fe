@@ -1,17 +1,16 @@
 import {Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/policies.$handle';
 import {type Shop} from '@shopify/hydrogen/storefront-api-types';
+import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
+import {getRootSeo} from '~/lib/seo';
 
 type SelectedPolicies = keyof Pick<
   Shop,
   'privacyPolicy' | 'shippingPolicy' | 'termsOfService' | 'refundPolicy'
 >;
 
-export const meta: Route.MetaFunction = ({data}) => {
-  return [
-    {title: `Oakwood Chemical | ${data?.policy.title ?? ''}`},
-    {rel: 'canonical', href: `/policies/${data?.policy.handle}`},
-  ];
+export const meta: Route.MetaFunction = ({data, matches}) => {
+  return getSeoMeta(getRootSeo(matches), data?.seo);
 };
 
 export async function loader({params, context}: Route.LoaderArgs) {
@@ -41,7 +40,13 @@ export async function loader({params, context}: Route.LoaderArgs) {
     throw new Response('Could not find the policy', {status: 404});
   }
 
-  return {policy};
+  const {pathPrefix} = context.storefront.i18n;
+  const seo: SeoConfig = {
+    title: policy.title,
+    url: `${pathPrefix}/policies/${policy.handle}`,
+  };
+
+  return {policy, seo};
 }
 
 export default function Policy() {

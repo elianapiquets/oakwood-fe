@@ -7,6 +7,8 @@ import {
   getProductOptions,
   getAdjacentAndFirstAvailableVariants,
   useSelectedOptionInUrlParam,
+  getSeoMeta,
+  type SeoConfig,
 } from '@shopify/hydrogen';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
@@ -14,32 +16,10 @@ import {ProductForm} from '~/components/ProductForm';
 import {ChemistryPanel} from '~/components/ChemistryPanel';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {fetchProductByHandle} from '~/lib/backend';
+import {getRootSeo, truncate} from '~/lib/seo';
 
-export const meta: Route.MetaFunction = ({data}) => {
-  const description =
-    data?.product.seo?.description ??
-    data?.product.description?.substring(0, 160) ??
-    null;
-  const price = data?.product.selectedOrFirstAvailableVariant?.price;
-
-  return [
-    {title: data?.product.seo?.title ?? `Oakwood Chemical | ${data?.product.title ?? ''}`},
-    {rel: 'canonical', href: `/products/${data?.product.handle}`},
-    ...(description ? [{name: 'description', content: description}] : []),
-    {
-      'script:ld+json': {
-        '@context': 'https://schema.org',
-        '@type': 'Product',
-        name: data?.product.title,
-        description: data?.product.description,
-        offers: {
-          '@type': 'Offer',
-          price: price?.amount,
-          priceCurrency: price?.currencyCode ?? 'USD',
-        },
-      },
-    },
-  ];
+export const meta: Route.MetaFunction = ({data, matches}) => {
+  return getSeoMeta(getRootSeo(matches), data?.seo);
 };
 
 export async function loader({context, params, request}: Route.LoaderArgs) {
@@ -74,7 +54,39 @@ export async function loader({context, params, request}: Route.LoaderArgs) {
 
   redirectIfHandleIsLocalized(request, {handle, data: product});
 
-  return {product, chemistry: backendProduct?.chemistry ?? null};
+  const variant = product.selectedOrFirstAvailableVariant;
+  const price = variant?.price;
+  const image = variant?.image?.url;
+  const description = product.seo?.description ?? truncate(product.description);
+  const {pathPrefix} = context.storefront.i18n;
+
+  const seo: SeoConfig = {
+    title: product.seo?.title ?? product.title,
+    ...(description ? {description} : {}),
+    url: `${pathPrefix}/products/${product.handle}`,
+    ...(image ? {media: image} : {}),
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.title,
+      description: product.seo?.description ?? product.description,
+      sku: variant?.sku,
+      ...(product.vendor
+        ? {brand: {'@type': 'Brand', name: product.vendor}}
+        : {}),
+      ...(image ? {image} : {}),
+      offers: {
+        '@type': 'Offer',
+        price: price?.amount,
+        priceCurrency: price?.currencyCode ?? 'USD',
+        availability: variant?.availableForSale
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+      },
+    },
+  };
+
+  return {product, chemistry: backendProduct?.chemistry ?? null, seo};
 }
 
 export default function Product() {

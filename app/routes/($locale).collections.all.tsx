@@ -1,41 +1,35 @@
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/collections.all';
-import {ProductsTable} from '~/components/ProductsTable';
-import type {ProductListItem} from '~/components/ProductListRow';
-import {fetchProducts} from '~/lib/backend';
-import type {BackendProduct} from '~/lib/backend';
+import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
+import {getRootSeo} from '~/lib/seo';
+import {loadCatalogData} from '~/lib/catalog';
+import {CatalogPageLayout} from '~/components/catalog/CatalogPageLayout';
 
-export const meta: Route.MetaFunction = () => {
-  return [
-    {title: 'Oakwood Chemical | All Products'},
-    {rel: 'canonical', href: '/collections/all'},
-  ];
+export const meta: Route.MetaFunction = ({data, matches}) => {
+  return getSeoMeta(getRootSeo(matches), data?.seo);
 };
 
-export async function loader(_args: Route.LoaderArgs) {
-  const products = await fetchProducts();
-  return {products};
-}
+export async function loader({context}: Route.LoaderArgs) {
+  const catalog = await loadCatalogData(context.storefront);
+  const {pathPrefix} = context.storefront.i18n;
 
-function backendToListItem(p: BackendProduct): ProductListItem {
-  return {
-    id: p.id,
-    title: p.title,
-    handle: p.handle,
-    variants: {nodes: p.variants},
-    chemistry: p.chemistry,
+  const seo: SeoConfig = {
+    title: catalog.collection?.title ?? 'Catalog',
+    url: `${pathPrefix}/collections/all`,
   };
+
+  return {...catalog, seo};
 }
 
-export default function AllProducts() {
-  const {products} = useLoaderData<typeof loader>();
+export default function CatalogPage() {
+  const {collections, collection, products} = useLoaderData<typeof loader>();
 
   return (
-    <div className="collection-page">
-      <div className="collection-page-header">
-        <h1 className="collection-page-title">All Products</h1>
-      </div>
-      <ProductsTable nodes={products.map(backendToListItem)} />
-    </div>
+    <CatalogPageLayout
+      collections={collections}
+      title={collection?.title ?? ''}
+      description={collection?.description}
+      products={products}
+    />
   );
 }

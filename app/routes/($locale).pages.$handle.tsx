@@ -1,14 +1,11 @@
 import {useState} from 'react';
 import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/pages.$handle';
+import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
+import {getRootSeo} from '~/lib/seo';
 
-export const meta: Route.MetaFunction = ({data}) => {
-  const description = data?.page.seo?.description ?? null;
-  return [
-    {title: data?.page.seo?.title ?? `Oakwood Chemical | ${data?.page.title ?? ''}`},
-    {rel: 'canonical', href: `/pages/${data?.page.handle}`},
-    ...(description ? [{name: 'description', content: description}] : []),
-  ];
+export const meta: Route.MetaFunction = ({data, matches}) => {
+  return getSeoMeta(getRootSeo(matches), data?.seo);
 };
 
 export async function loader({context, params}: Route.LoaderArgs) {
@@ -38,7 +35,14 @@ export async function loader({context, params}: Route.LoaderArgs) {
     throw new Response('Not Found', {status: 404});
   }
 
-  return {page};
+  const {pathPrefix} = storefront.i18n;
+  const seo: SeoConfig = {
+    title: page.seo?.title ?? page.title,
+    ...(page.seo?.description ? {description: page.seo.description} : {}),
+    url: `${pathPrefix}/pages/${page.handle}`,
+  };
+
+  return {page, seo};
 }
 
 export default function Page() {
