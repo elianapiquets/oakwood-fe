@@ -150,9 +150,7 @@ export async function loader({context}: Route.LoaderArgs) {
         metafields(identifiers: [
           {namespace: "custom", key: "job_title"},
           {namespace: "custom", key: "phone_extension"},
-          {namespace: "custom", key: "fax"},
-          {namespace: "custom", key: "address3"},
-          {namespace: "custom", key: "address4"}
+          {namespace: "custom", key: "fax"}
         ]) {
           key
           value
@@ -165,7 +163,8 @@ export async function loader({context}: Route.LoaderArgs) {
 }
 
 export default function Account() {
-  const {customer} = useLoaderData<typeof loader>();
+  const loaderData = useLoaderData() as any;
+  const customer = loaderData?.customer;
 
   return (
     <div className="w-full px-6 py-8">

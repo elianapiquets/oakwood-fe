@@ -10,7 +10,6 @@ import type { FC } from 'react';
  * @returns component with additional props added (name, nextInputToFocus)
  */
 const createHandledFormElement = <
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Component extends FC<any>,
   SchemaType extends FieldValues,
 >(
@@ -19,7 +18,7 @@ const createHandledFormElement = <
   type Props = Parameters<Component>[0] & HandledFormElementProps<SchemaType>;
 
   const MemoizedComponent = memo(
-    forwardRef<unknown, Props>((props, _ref) => (
+    forwardRef<unknown, Props>((props: any, _ref) => (
       <WrappedComponent {...props} />
     )),
   );

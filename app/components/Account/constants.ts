@@ -5,8 +5,6 @@ const userSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   address1: z.string().default(''),
   address2: z.string().default(''),
-  address3: z.string().default(''),
-  address4: z.string().default(''),
   city: z.string().default(''),
   zoneCode: z.string().default(''),
   territoryCode: z.string().default('US'),

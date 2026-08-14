@@ -111,8 +111,6 @@ function UserInformation({customer}: UserInformationProps) {
       lastName: customer?.lastName ?? '',
       address1: addr?.address1 ?? '',
       address2: addr?.address2 ?? '',
-      address3: metaMap.address3 ?? '',
-      address4: metaMap.address4 ?? '',
       city: addr?.city ?? '',
       zoneCode: addr?.zoneCode ?? '',
       territoryCode: addr?.territoryCode ?? 'US',
@@ -138,8 +136,6 @@ function UserInformation({customer}: UserInformationProps) {
       lastName: customer?.lastName ?? '',
       address1: addr?.address1 ?? '',
       address2: addr?.address2 ?? '',
-      address3: metaMap.address3 ?? '',
-      address4: metaMap.address4 ?? '',
       city: addr?.city ?? '',
       zoneCode: addr?.zoneCode ?? '',
       territoryCode: addr?.territoryCode ?? 'US',
@@ -230,17 +226,7 @@ function UserInformation({customer}: UserInformationProps) {
         </UserFormItem>
 
         <UserFormItem name="address2">
-          <Form.Input placeholder="ADDRESS LINE 2" disabled={!isEditingUser} />
-          <Form.Error />
-        </UserFormItem>
-
-        <UserFormItem name="address3">
-          <Form.Input placeholder="ADDRESS LINE 3" disabled={!isEditingUser} />
-          <Form.Error />
-        </UserFormItem>
-
-        <UserFormItem name="address4">
-          <Form.Input placeholder="ADDRESS LINE 4" disabled={!isEditingUser} />
+          <Form.Input placeholder="APT, SUITE, ETC." disabled={!isEditingUser} />
           <Form.Error />
         </UserFormItem>
 
