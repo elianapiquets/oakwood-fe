@@ -43,6 +43,7 @@ export async function loadCatalogData(
     return {
       id: product.id,
       title: product.title,
+      handle: product.handle,
       sku,
       // Not available from the Storefront API — comes from the custom
       // chemistry backend, to be wired in separately.
