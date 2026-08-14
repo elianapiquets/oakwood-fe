@@ -1,11 +1,10 @@
 import {Link, useLoaderData} from 'react-router';
 import type {Route} from './+types/policies._index';
+import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
+import {getRootSeo} from '~/lib/seo';
 
-export const meta: Route.MetaFunction = () => {
-  return [
-    {title: 'Oakwood Chemical | Policies'},
-    {rel: 'canonical', href: '/policies'},
-  ];
+export const meta: Route.MetaFunction = ({data, matches}) => {
+  return getSeoMeta(getRootSeo(matches), data?.seo);
 };
 import type {PoliciesQuery, PolicyItemFragment} from 'storefrontapi.generated';
 
@@ -25,7 +24,13 @@ export async function loader({context}: Route.LoaderArgs) {
     throw new Response('No policies found', {status: 404});
   }
 
-  return {policies};
+  const {pathPrefix} = context.storefront.i18n;
+  const seo: SeoConfig = {
+    title: 'Policies',
+    url: `${pathPrefix}/policies`,
+  };
+
+  return {policies, seo};
 }
 
 export default function Policies() {

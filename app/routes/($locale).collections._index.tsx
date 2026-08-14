@@ -1,17 +1,23 @@
 import {useLoaderData, Link} from 'react-router';
 import type {Route} from './+types/collections._index';
+import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
 import {fetchCollections} from '~/lib/backend';
+import {getRootSeo} from '~/lib/seo';
 
-export const meta: Route.MetaFunction = () => {
-  return [
-    {title: 'Oakwood Chemical | Collections'},
-    {rel: 'canonical', href: '/collections'},
-  ];
+export const meta: Route.MetaFunction = ({data, matches}) => {
+  return getSeoMeta(getRootSeo(matches), data?.seo);
 };
 
-export async function loader(_args: Route.LoaderArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   const collections = await fetchCollections();
-  return {collections};
+  const {pathPrefix} = context.storefront.i18n;
+
+  const seo: SeoConfig = {
+    title: 'Collections',
+    url: `${pathPrefix}/collections`,
+  };
+
+  return {collections, seo};
 }
 
 export default function Collections() {

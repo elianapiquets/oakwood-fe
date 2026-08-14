@@ -1,20 +1,26 @@
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/collections.all';
+import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
 import {ProductsTable} from '~/components/ProductsTable';
 import type {ProductListItem} from '~/components/ProductListRow';
 import {fetchProducts} from '~/lib/backend';
 import type {BackendProduct} from '~/lib/backend';
+import {getRootSeo} from '~/lib/seo';
 
-export const meta: Route.MetaFunction = () => {
-  return [
-    {title: 'Oakwood Chemical | All Products'},
-    {rel: 'canonical', href: '/collections/all'},
-  ];
+export const meta: Route.MetaFunction = ({data, matches}) => {
+  return getSeoMeta(getRootSeo(matches), data?.seo);
 };
 
-export async function loader(_args: Route.LoaderArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   const products = await fetchProducts();
-  return {products};
+  const {pathPrefix} = context.storefront.i18n;
+
+  const seo: SeoConfig = {
+    title: 'All Products',
+    url: `${pathPrefix}/collections/all`,
+  };
+
+  return {products, seo};
 }
 
 function backendToListItem(p: BackendProduct): ProductListItem {

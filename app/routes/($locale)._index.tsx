@@ -1,6 +1,7 @@
 import {Await, useLoaderData} from 'react-router';
 import type {Route} from './+types/_index';
 import {Suspense} from 'react';
+import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
 import {MockShopNotice} from '~/components/MockShopNotice';
 import {HomeSidebar} from '~/components/HomeSidebar';
 import {FeaturedCollection} from '~/components/FeaturedCollection';
@@ -8,12 +9,10 @@ import {ProductsTable} from '~/components/ProductsTable';
 import type {ProductListItem} from '~/components/ProductListRow';
 import {fetchCollections, fetchProducts} from '~/lib/backend';
 import type {BackendProduct} from '~/lib/backend';
+import {getRootSeo} from '~/lib/seo';
 
-export const meta: Route.MetaFunction = () => {
-  return [
-    {title: 'Oakwood Chemical | Chemicals for Research & Development'},
-    {rel: 'canonical', href: '/'},
-  ];
+export const meta: Route.MetaFunction = ({data, matches}) => {
+  return getSeoMeta(getRootSeo(matches), data?.seo);
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -24,10 +23,21 @@ export async function loader(args: Route.LoaderArgs) {
 
 async function loadCriticalData({context}: Route.LoaderArgs) {
   const collections = await fetchCollections();
+  const {pathPrefix} = context.storefront.i18n;
+
+  const seo: SeoConfig = {
+    title: 'Chemicals for Research & Development',
+    // getSeoMeta strips a trailing slash from `url`, which collapses a bare
+    // "/" to an empty canonical/og:url. For the default locale, omit `url`
+    // entirely and let root's absolute shop domain serve as the canonical.
+    ...(pathPrefix ? {url: pathPrefix} : {}),
+  };
+
   return {
     isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
     featuredCollection: collections[0] ?? null,
     allCollections: collections,
+    seo,
   };
 }
 

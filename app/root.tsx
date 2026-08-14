@@ -1,4 +1,5 @@
 import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
+import type {SeoConfig} from '@shopify/hydrogen';
 import {
   Outlet,
   useRouteError,
@@ -117,7 +118,18 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
     // Add other queries here, so that they are loaded in parallel
   ]);
 
-  return {header};
+  const {shop} = header;
+  const seo: SeoConfig = {
+    title: shop.name,
+    titleTemplate: `%s | ${shop.name}`,
+    description: shop.description,
+    url: shop.primaryDomain.url,
+    ...(shop.brand?.logo?.image?.url
+      ? {media: shop.brand.logo.image.url}
+      : {}),
+  };
+
+  return {header, seo};
 }
 
 /**

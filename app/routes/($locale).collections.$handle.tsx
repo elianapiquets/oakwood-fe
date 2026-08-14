@@ -1,18 +1,17 @@
 import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/collections.$handle';
+import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
 import {ProductsTable} from '~/components/ProductsTable';
 import type {ProductListItem} from '~/components/ProductListRow';
 import {fetchCollection} from '~/lib/backend';
 import type {BackendProduct} from '~/lib/backend';
+import {getRootSeo, truncate} from '~/lib/seo';
 
-export const meta: Route.MetaFunction = ({data}) => {
-  return [
-    {title: `Oakwood Chemical | ${data?.collection.title ?? ''}`},
-    {rel: 'canonical', href: `/collections/${data?.collection.handle}`},
-  ];
+export const meta: Route.MetaFunction = ({data, matches}) => {
+  return getSeoMeta(getRootSeo(matches), data?.seo);
 };
 
-export async function loader({params}: Route.LoaderArgs) {
+export async function loader({params, context}: Route.LoaderArgs) {
   const {handle} = params;
   if (!handle) throw redirect('/collections');
 
@@ -21,7 +20,16 @@ export async function loader({params}: Route.LoaderArgs) {
     throw new Response(`Collection ${handle} not found`, {status: 404});
   }
 
-  return {collection};
+  const {pathPrefix} = context.storefront.i18n;
+  const description = truncate(collection.description);
+
+  const seo: SeoConfig = {
+    title: collection.title,
+    ...(description ? {description} : {}),
+    url: `${pathPrefix}/collections/${collection.handle}`,
+  };
+
+  return {collection, seo};
 }
 
 function backendToListItem(p: BackendProduct): ProductListItem {
