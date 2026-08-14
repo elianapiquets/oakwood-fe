@@ -39,6 +39,7 @@ const FormController = <Schema extends RequiredSchema>({
       {Children.map(children, (child) => {
         // Cast child to ReactElement with our ChildProps interface
         const typedChild = child as ReactElement<ChildProps>;
+        if (!typedChild || typeof typedChild !== 'object') return child;
         const currentChildName = typedChild.props.name;
 
         if (!currentChildName) {

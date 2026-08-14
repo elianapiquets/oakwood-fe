@@ -11,16 +11,7 @@ const userSchema = z.object({
   zip: z.string().default(''),
 });
 
-const companySchema = z.object({
-  company: z.string().default(''),
-  jobTitle: z.string().default(''),
-  phone: z.string().default(''),
-  extension: z.string().default(''),
-  fax: z.string().default(''),
-});
-
 type UserFormValues = z.infer<typeof userSchema>;
-type CompanyFormValues = z.infer<typeof companySchema>;
 
 const US_STATE_OPTIONS = [
   {label: 'Alabama', value: 'AL'},
@@ -88,5 +79,5 @@ const COUNTRY_OPTIONS = [
   {label: 'Mexico', value: 'MX'},
 ];
 
-export { userSchema, companySchema, US_STATE_OPTIONS, COUNTRY_OPTIONS};
-export type {UserFormValues, CompanyFormValues};
+export { userSchema, US_STATE_OPTIONS, COUNTRY_OPTIONS};
+export type {UserFormValues};

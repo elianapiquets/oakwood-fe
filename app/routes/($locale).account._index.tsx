@@ -38,26 +38,56 @@ const UPDATE_CUSTOMER_MUTATION = `#graphql-customer-account
   }
 ` as const;
 
+const SET_ACTIVE_COMPANY_MUTATION = `#graphql-customer-account
+  mutation SetActiveCompany($metafields: [MetafieldsSetInput!]!) {
+    metafieldsSet(metafields: $metafields) {
+      userErrors { code field message }
+    }
+  }
+` as const;
+
+
 export async function action({request, context}: Route.ActionArgs) {
   const isLoggedIn = await context.customerAccount.isLoggedIn();
   if (!isLoggedIn) return context.customerAccount.login();
 
   const form = await request.formData();
   const section = String(form.get('_section') ?? '');
-  const addressId = String(form.get('addressId') ?? '');
   const errors: string[] = [];
-
-  const {data: current} = await context.customerAccount.query(
-    CURRENT_ADDRESS_QUERY,
-  );
-  const currentAddr = current?.customer?.defaultAddress;
 
   const get = (key: string) => {
     const val = form.get(key);
     return val !== null && val !== '' ? String(val) : undefined;
   };
 
-  if (section === 'user') {
+  if (section === 'company_selection') {
+    const companyId = get('companyId');
+    const customerId = get('customerId');
+    if (companyId && customerId) {
+      const {data: result} = await context.customerAccount.mutate(
+        SET_ACTIVE_COMPANY_MUTATION,
+        {
+          variables: {
+            metafields: [{
+              ownerId: customerId,
+              namespace: 'custom',
+              key: 'active_company_id',
+              value: companyId,
+              type: 'single_line_text_field',
+            }],
+          },
+        },
+      );
+      for (const e of result?.metafieldsSet?.userErrors ?? []) {
+        errors.push(e.message);
+      }
+    }
+  } else if (section === 'user') {
+    const addressId = String(form.get('addressId') ?? '');
+
+    const {data: current} = await context.customerAccount.query(CURRENT_ADDRESS_QUERY);
+    const currentAddr = current?.customer?.defaultAddress;
+
     const firstName = get('firstName');
     const lastName = get('lastName');
     if (firstName ?? lastName) {
@@ -93,30 +123,6 @@ export async function action({request, context}: Route.ActionArgs) {
         errors.push(e.message);
       }
     }
-  } else if (section === 'company') {
-    if (addressId) {
-      const {data: addressData} = await context.customerAccount.mutate(
-        UPDATE_ADDRESS_MUTATION,
-        {
-          variables: {
-            addressId,
-            address: {
-              address1: currentAddr?.address1 ?? '',
-              address2: currentAddr?.address2 ?? '',
-              city: currentAddr?.city ?? '',
-              zoneCode: currentAddr?.zoneCode ?? '',
-              territoryCode: currentAddr?.territoryCode ?? '',
-              zip: currentAddr?.zip ?? '',
-              company: get('company') ?? currentAddr?.company ?? '',
-              phoneNumber: get('phone') ?? currentAddr?.phoneNumber ?? '',
-            },
-          },
-        },
-      );
-      for (const e of addressData?.customerAddressUpdate?.userErrors ?? []) {
-        errors.push(e.message);
-      }
-    }
   }
 
   if (errors.length) {
@@ -130,45 +136,65 @@ export async function loader({context}: Route.LoaderArgs) {
   const isLoggedIn = await context.customerAccount.isLoggedIn();
   if (!isLoggedIn) return context.customerAccount.login();
 
-  const {data} = await context.customerAccount.query(`
-    query AccountInfo {
-      customer {
-        firstName
-        lastName
-        emailAddress { emailAddress }
-        defaultAddress {
+  const env = context.env as Record<string, string>;
+  const backendUrl = env.BACKEND_URL ?? '';
+  const backendApiKey = env.BACKEND_API_KEY ?? '';
+
+  const [{data}, companiesRes] = await Promise.all([
+    context.customerAccount.query(`
+      query AccountInfo {
+        customer {
           id
-          address1
-          address2
-          city
-          zoneCode
-          territoryCode
-          zip
-          company
-          phoneNumber
-        }
-        metafields(identifiers: [
-          {namespace: "custom", key: "job_title"},
-          {namespace: "custom", key: "phone_extension"},
-          {namespace: "custom", key: "fax"}
-        ]) {
-          key
-          value
+          firstName
+          lastName
+          emailAddress { emailAddress }
+          defaultAddress {
+            id
+            address1
+            address2
+            city
+            zoneCode
+            territoryCode
+            zip
+            company
+            phoneNumber
+          }
+          companyContacts(first: 50) {
+            nodes {
+              id
+              company { id name }
+            }
+          }
+          metafields(identifiers: [
+            {namespace: "custom", key: "job_title"},
+            {namespace: "custom", key: "phone_extension"},
+            {namespace: "custom", key: "fax"},
+            {namespace: "custom", key: "active_company_id"}
+          ]) {
+            key
+            value
+          }
         }
       }
-    }
-  `);
+    `),
+    fetch(`${backendUrl}/api/companies`, {
+      headers: {'x-api-key': backendApiKey},
+    }).then((r) => r.json()).catch(() => []),
+  ]);
 
-  return {customer: data?.customer};
+  const allCompanies = Array.isArray(companiesRes) ? companiesRes : [];
+
+  return {customer: data?.customer, allCompanies};
 }
 
 export default function Account() {
   const loaderData = useLoaderData() as any;
   const customer = loaderData?.customer;
+  const allCompanies = loaderData?.allCompanies ?? [];
 
   return (
     <div className="w-full px-6 py-8">
-      <MyAccount customer={customer} />
+      <MyAccount customer={customer} allCompanies={allCompanies} />
     </div>
   );
 }

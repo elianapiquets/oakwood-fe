@@ -129,3 +129,4 @@ export async function fetchChemistryMap(
     .catch(() => []);
   return new Map(data.map((p) => [p.handle, p.chemistry]));
 }
+
