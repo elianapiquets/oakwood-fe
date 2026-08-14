@@ -1,6 +1,9 @@
+import {Link} from 'react-router';
+
 export interface CatalogTableProduct {
   id: string;
   title: string;
+  handle: string;
   sku: string | null;
   purity: string | null;
   sizes: string[];
@@ -26,7 +29,9 @@ export function CatalogTable({
           {products.map((product) => (
             <tr key={product.id}>
               <td className="px-4 py-4 align-top font-semibold text-blue-700">
-                {product.title}
+                <Link to={`/products/${product.handle}`} className="hover:underline">
+                  {product.title}
+                </Link>
               </td>
               <td className="px-4 py-4 align-top font-mono text-sm text-slate-500">
                 {product.sku}

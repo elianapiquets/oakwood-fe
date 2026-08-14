@@ -2,21 +2,20 @@ import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/products.$handle';
 import {
   getSelectedProductOptions,
-  Analytics,
+  getSeoMeta,
+  type SeoConfig,
   useOptimisticVariant,
   getProductOptions,
   getAdjacentAndFirstAvailableVariants,
   useSelectedOptionInUrlParam,
-  getSeoMeta,
-  type SeoConfig,
 } from '@shopify/hydrogen';
-import {ProductPrice} from '~/components/ProductPrice';
-import {ProductImage} from '~/components/ProductImage';
-import {ProductForm} from '~/components/ProductForm';
-import {ChemistryPanel} from '~/components/ChemistryPanel';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {fetchProductByHandle} from '~/lib/backend';
 import {getRootSeo, truncate} from '~/lib/seo';
+import {ProductBreadcrumb} from '~/components/product/ProductBreadcrumb';
+import {ProductGallery} from '~/components/product/ProductGallery';
+import {ProductInfoColumn} from '~/components/product/ProductInfoColumn';
+import {ProductDetailsSection} from '~/components/product/ProductDetailsSection';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
   return getSeoMeta(getRootSeo(matches), data?.seo);
@@ -89,8 +88,10 @@ export async function loader({context, params, request}: Route.LoaderArgs) {
   return {product, chemistry: backendProduct?.chemistry ?? null, seo};
 }
 
+// TODO: breadcrumb, gallery, identifiers, perks, quote callout, and the
+// details section below are still on mock data. See app/components/product/.
 export default function Product() {
-  const {product, chemistry} = useLoaderData<typeof loader>();
+  const {product} = useLoaderData<typeof loader>();
 
   const selectedVariant = useOptimisticVariant(
     product.selectedOrFirstAvailableVariant,
@@ -104,47 +105,23 @@ export default function Product() {
     selectedOrFirstAvailableVariant: selectedVariant,
   });
 
-  const {title, descriptionHtml} = product;
-
   return (
-    <div className="product">
-      <ProductImage image={selectedVariant?.image} />
-      <div className="product-main">
-        <h1>{title}</h1>
-        <ProductPrice
+    <div className="w-full px-8 py-6">
+      <ProductBreadcrumb />
+      <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-2">
+        <ProductGallery />
+        <ProductInfoColumn
           price={selectedVariant?.price}
           compareAtPrice={selectedVariant?.compareAtPrice}
-        />
-        <br />
-        <ProductForm
+          availableForSale={selectedVariant?.availableForSale}
+          unit={selectedVariant?.title}
           productOptions={productOptions}
           selectedVariant={selectedVariant}
         />
-        <br />
-        <br />
-        <p>
-          <strong>Description</strong>
-        </p>
-        <br />
-        <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-        <br />
-        {chemistry && <ChemistryPanel data={chemistry} />}
       </div>
-      <Analytics.ProductView
-        data={{
-          products: [
-            {
-              id: product.id,
-              title: product.title,
-              price: selectedVariant?.price.amount || '0',
-              vendor: product.vendor,
-              variantId: selectedVariant?.id || '',
-              variantTitle: selectedVariant?.title || '',
-              quantity: 1,
-            },
-          ],
-        }}
-      />
+      <div className="mt-12">
+        <ProductDetailsSection />
+      </div>
     </div>
   );
 }

@@ -26,6 +26,7 @@ export const CATALOG_COLLECTION_QUERY = `#graphql
         nodes {
           id
           title
+          handle
           variants(first: 10) {
             nodes {
               id
