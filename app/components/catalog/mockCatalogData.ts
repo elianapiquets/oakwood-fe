@@ -1,24 +1,3 @@
-export interface MockCollection {
-  handle: string;
-  title: string;
-}
-
-export const mockCollections: MockCollection[] = [
-  {handle: 'anhydrous-solvents', title: 'Anhydrous Solvents'},
-  {handle: 'boronic-acids-and-esters', title: 'Boronic Acids And Esters'},
-  {handle: 'brominated-aromatics', title: 'Brominated Aromatics'},
-  {handle: 'peptide-coupling', title: 'Peptide Coupling'},
-  {handle: 'fluorinated-amines', title: 'Fluorinated Amines'},
-  {handle: 'fluorinated-carboxylic-acids', title: 'Fluorinated Carboxylic Acids'},
-  {handle: 'grignard-reagents', title: 'Grignard Reagents'},
-  {handle: 'selected-sulfur-compounds', title: 'Selected Sulfur Compounds'},
-  {handle: 'reagents-for-oligo-synthesis', title: 'Reagents for Oligo synthesis'},
-  {handle: 'reagents-for-synthesis', title: 'Reagents for Synthesis'},
-  {handle: 'protecting-groups', title: 'Protecting Groups'},
-  {handle: 'solvents', title: 'Solvents'},
-  {handle: 'trace-metals-grade-chemicals', title: 'Trace Metals Grade Chemicals'},
-];
-
 export interface MockCategory {
   eyebrow: string;
   title: string;
