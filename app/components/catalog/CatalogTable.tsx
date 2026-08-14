@@ -1,6 +1,16 @@
-import {mockCatalogProducts} from './mockCatalogData';
+export interface CatalogTableProduct {
+  id: string;
+  title: string;
+  sku: string | null;
+  purity: string | null;
+  sizes: string[];
+}
 
-export function CatalogTable() {
+export function CatalogTable({
+  products,
+}: {
+  products: CatalogTableProduct[];
+}) {
   return (
     <div className="overflow-hidden rounded border border-slate-200 bg-white">
       <table className="w-full text-left">
@@ -13,8 +23,8 @@ export function CatalogTable() {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {mockCatalogProducts.map((product) => (
-            <tr key={product.sku}>
+          {products.map((product) => (
+            <tr key={product.id}>
               <td className="px-4 py-4 align-top font-semibold text-blue-700">
                 {product.title}
               </td>
@@ -22,9 +32,11 @@ export function CatalogTable() {
                 {product.sku}
               </td>
               <td className="px-4 py-4 align-top">
-                <span className="inline-block rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-mono font-semibold text-emerald-700">
-                  {product.purity}
-                </span>
+                {product.purity && (
+                  <span className="inline-block rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-mono font-semibold text-emerald-700">
+                    {product.purity}
+                  </span>
+                )}
               </td>
               <td className="px-4 py-4 align-top">
                 <div className="flex flex-wrap gap-2">
