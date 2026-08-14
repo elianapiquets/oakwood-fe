@@ -26,40 +26,6 @@ export function Header({
   const {shop, menu} = header;
   return (
     <div className="sticky top-0 z-50 bg-white shadow-sm">
-      {/* Top bar */}
-      <div className="bg-navy-dark text-right px-6 py-1 text-xs text-gray-400">
-        <Suspense
-          fallback={
-            <NavLink
-              to="/account/login"
-              className="text-gray-400 hover:text-white hover:underline"
-            >
-              Please Sign In to Place an Order
-            </NavLink>
-          }
-        >
-          <Await resolve={customerName}>
-            {(name) =>
-              name ? (
-                <NavLink
-                  to="/account"
-                  className="text-gray-400 hover:text-white hover:underline"
-                >
-                  Welcome, {name}
-                </NavLink>
-              ) : (
-                <NavLink
-                  to="/account/login"
-                  className="text-gray-400 hover:text-white hover:underline"
-                >
-                  Please Sign In to Place an Order
-                </NavLink>
-              )
-            }
-          </Await>
-        </Suspense>
-      </div>
-
       {/* Main header row */}
       <div className="flex items-center px-6 py-3 bg-white gap-4">
         <NavLink prefetch="intent" to="/" className="flex items-center gap-2.5 no-underline flex-shrink-0" end>
@@ -86,36 +52,16 @@ export function Header({
           </p>
         </div>
 
-        <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-          <Suspense fallback={null}>
-            <Await resolve={customerName}>
-              {(name) =>
-                !name ? (
-                  <NavLink
-                    to="/account/register"
-                    className="text-gray-700 text-[0.8rem] px-3 py-1.5 border border-gray-300 rounded bg-white hover:bg-gray-100 whitespace-nowrap no-underline"
-                  >
-                    New Customer?
-                  </NavLink>
-                ) : null
-              }
-            </Await>
-          </Suspense>
-          <CartToggle cart={cart} />
+        <div className="hidden md:flex items-center gap-4 flex-shrink-0">
           <NavLink
             to="/pages/contact"
-            className="text-gray-700 text-[0.8rem] px-1 py-1.5 whitespace-nowrap hover:underline hover:text-navy no-underline"
+            aria-label="Contact us"
+            className="text-gray-500 hover:text-navy"
           >
-            Contact Us
+            <MailIcon />
           </NavLink>
-          <span className="text-white">
-            <NavLink
-              to="/account"
-              className="bg-navy text-[0.8rem] px-3.5 py-1.5 rounded font-medium whitespace-nowrap hover:bg-navy-dark no-underline"
-            >
-              My Account
-            </NavLink>
-          </span>
+          <UserAvatar customerName={customerName} />
+          <CartToggle cart={cart} />
         </div>
       </div>
 
@@ -426,7 +372,8 @@ function CartBadge({count}: {count: number}) {
   return (
     <a
       href="/cart"
-      className="text-gray-700 text-[0.8rem] px-3 py-1.5 border border-gray-300 rounded bg-white hover:bg-gray-100 whitespace-nowrap no-underline cursor-pointer"
+      aria-label={`Cart, ${count} item${count === 1 ? '' : 's'}`}
+      className="relative text-gray-500 hover:text-navy cursor-pointer"
       onClick={(e) => {
         e.preventDefault();
         open('cart');
@@ -438,8 +385,74 @@ function CartBadge({count}: {count: number}) {
         } as CartViewPayload);
       }}
     >
-      Cart ({count})
+      <BagIcon />
+      {count > 0 && (
+        <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-navy px-1 text-[0.6rem] font-semibold text-white">
+          {count}
+        </span>
+      )}
     </a>
+  );
+}
+
+function UserAvatar({
+  customerName,
+}: {
+  customerName: HeaderProps['customerName'];
+}) {
+  return (
+    <Suspense
+      fallback={
+        <NavLink to="/account/login" aria-label="Account" className="text-gray-500 hover:text-navy">
+          <UserIcon />
+        </NavLink>
+      }
+    >
+      <Await resolve={customerName}>
+        {(name) =>
+          name ? (
+            <NavLink
+              to="/account"
+              aria-label={`Account, signed in as ${name}`}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-sm font-semibold !text-white"
+            >
+              {name.charAt(0).toUpperCase()}
+            </NavLink>
+          ) : (
+            <NavLink to="/account/login" aria-label="Account" className="text-gray-500 hover:text-navy">
+              <UserIcon />
+            </NavLink>
+          )
+        }
+      </Await>
+    </Suspense>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 7l9 6 9-6" />
+    </svg>
+  );
+}
+
+function UserIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" />
+    </svg>
+  );
+}
+
+function BagIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 8h12l1 12H5L6 8z" />
+      <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+    </svg>
   );
 }
 
