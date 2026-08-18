@@ -75,12 +75,12 @@ function MyAccount({customer, allCompanies = []}: MyAccountProps) {
 
       <Suspense fallback={null}>
         <UserInformation customer={customer} />
-        <Company
-          customerId={customer?.id}
-          allCompanies={allCompanies}
-          memberCompanyIds={memberCompanyIds}
-          savedCompanyId={savedCompanyId}
-        />
+        {/*<Company*/}
+        {/*  customerId={customer?.id}*/}
+        {/*  allCompanies={allCompanies}*/}
+        {/*  memberCompanyIds={memberCompanyIds}*/}
+        {/*  savedCompanyId={savedCompanyId}*/}
+        {/*/>*/}
       </Suspense>
     </div>
   );

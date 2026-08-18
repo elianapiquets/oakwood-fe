@@ -1,5 +1,24 @@
 // NOTE: https://shopify.dev/docs/api/storefront/latest/queries/cart
-export const CART_QUERY_FRAGMENT = `#graphql
+//
+// Hydrogen's cart handler uses two *separate* fragment slots:
+// - `queryFragment`, spread as `...CartApiQuery` — only used by `cart.get()`.
+// - `mutateFragment`, spread as `...CartApiMutation` — used by every cart
+//   mutation (create, addLines, updateBuyerIdentity, etc). If this isn't
+//   configured, Hydrogen silently falls back to its own minimal built-in
+//   `CartApiMutation` fragment (id/totalQuantity/checkoutUrl only), so
+//   mutation responses are missing anything we added here, like
+//   buyerIdentity — with no error, since the query is still valid GraphQL.
+// Both fragment bodies below spread the same `CartFields` selection so the
+// two response shapes never drift apart.
+//
+// `lines(first: ...)` is parameterized rather than shared verbatim: the
+// `cart.get()` query declares `$numCartLines: Int = 100` itself, so its
+// fragment must reference that variable (an operation variable is a GraphQL
+// error if it's declared but never used) — but mutation operations
+// (cartLinesAdd, cartCreate, cartBuyerIdentityUpdate, etc.) never declare
+// `$numCartLines`, so referencing it there is an "undefined variable" error
+// instead. A literal `100` sidesteps both.
+const cartFieldsFragment = (linesFirst: string) => `#graphql
   fragment Money on MoneyV2 {
     currencyCode
     amount
@@ -113,7 +132,7 @@ export const CART_QUERY_FRAGMENT = `#graphql
       ...CartLine
     }
   }
-  fragment CartApiQuery on Cart {
+  fragment CartFields on Cart {
     updatedAt
     id
     appliedGiftCards {
@@ -136,8 +155,18 @@ export const CART_QUERY_FRAGMENT = `#graphql
       }
       email
       phone
+      purchasingCompany {
+        company {
+          id
+          name
+        }
+        location {
+          id
+          name
+        }
+      }
     }
-    lines(first: $numCartLines) {
+    lines(first: ${linesFirst}) {
       nodes {
         ...CartLine
       }
@@ -169,6 +198,20 @@ export const CART_QUERY_FRAGMENT = `#graphql
       applicable
     }
   }
+`;
+
+export const CART_QUERY_FRAGMENT = `#graphql
+  fragment CartApiQuery on Cart {
+    ...CartFields
+  }
+  ${cartFieldsFragment('$numCartLines')}
+` as const;
+
+export const CART_MUTATE_FRAGMENT = `#graphql
+  fragment CartApiMutation on Cart {
+    ...CartFields
+  }
+  ${cartFieldsFragment('100')}
 ` as const;
 
 const MENU_FRAGMENT = `#graphql

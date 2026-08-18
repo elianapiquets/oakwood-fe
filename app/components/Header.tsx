@@ -6,13 +6,15 @@ import {
   useOptimisticCart,
 } from '@shopify/hydrogen';
 import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
+import type {CustomerData} from '~/root';
 import {useAside} from '~/components/Aside';
+import {AccountMenu} from '~/components/Account/AccountMenu';
 
 interface HeaderProps {
   header: HeaderQuery;
   cart: Promise<CartApiQueryFragment | null>;
   publicStoreDomain: string;
-  customerName: Promise<string | null>;
+  customer: Promise<CustomerData | null>;
 }
 
 type Viewport = 'desktop' | 'mobile';
@@ -21,7 +23,7 @@ export function Header({
   header,
   cart,
   publicStoreDomain,
-  customerName,
+  customer,
 }: HeaderProps) {
   const {shop, menu} = header;
   return (
@@ -60,7 +62,7 @@ export function Header({
           >
             <MailIcon />
           </NavLink>
-          <UserAvatar customerName={customerName} />
+          <UserAvatar customer={customer} />
           <CartToggle cart={cart} />
         </div>
       </div>
@@ -396,9 +398,9 @@ function CartBadge({count}: {count: number}) {
 }
 
 function UserAvatar({
-  customerName,
+  customer,
 }: {
-  customerName: HeaderProps['customerName'];
+  customer: HeaderProps['customer'];
 }) {
   return (
     <Suspense
@@ -408,16 +410,16 @@ function UserAvatar({
         </NavLink>
       }
     >
-      <Await resolve={customerName}>
-        {(name) =>
-          name ? (
-            <NavLink
-              to="/account"
-              aria-label={`Account, signed in as ${name}`}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-sm font-semibold !text-white"
-            >
-              {name.charAt(0).toUpperCase()}
-            </NavLink>
+      <Await resolve={customer}>
+        {(resolvedCustomer) =>
+          resolvedCustomer ? (
+            <AccountMenu
+              name={resolvedCustomer.name}
+              email={resolvedCustomer.email}
+              company={resolvedCustomer.company}
+              locations={resolvedCustomer.locations}
+              selectedLocation={resolvedCustomer.selectedLocation}
+            />
           ) : (
             <NavLink to="/account/login" aria-label="Account" className="text-gray-500 hover:text-navy">
               <UserIcon />

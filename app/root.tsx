@@ -137,6 +137,49 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
+export interface CustomerCompanyLocation {
+  id: string;
+  name: string;
+  role: string | null;
+}
+
+export interface CustomerData {
+  name: string;
+  email: string;
+  company: {id: string; name: string} | null;
+  locations: CustomerCompanyLocation[];
+  selectedLocation: CustomerCompanyLocation | null;
+  needsLocationSelection: boolean;
+}
+
+const CUSTOMER_QUERY = `#graphql-customer-account
+  query CustomerHeaderInfo {
+    customer {
+      firstName
+      lastName
+      emailAddress { emailAddress }
+      companyContacts(first: 1) {
+        nodes {
+          id
+          company { id name }
+          locations(first: 10) {
+            nodes {
+              id
+              name
+              roleAssignments(first: 10) {
+                nodes {
+                  role { name }
+                  contact { id }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+` as const;
+
 function loadDeferredData({context}: Route.LoaderArgs) {
   const {storefront, customerAccount, cart} = context;
 
@@ -152,26 +195,55 @@ function loadDeferredData({context}: Route.LoaderArgs) {
       return null;
     });
 
-  const customerName = customerAccount
+  const customer: Promise<CustomerData | null> = customerAccount
     .isLoggedIn()
     .then(async (isLoggedIn) => {
       if (!isLoggedIn) return null;
-      const {data} = await customerAccount.query(
-        `query { customer { firstName lastName emailAddress { emailAddress } } }`,
-      );
+      const {data} = await customerAccount.query(CUSTOMER_QUERY);
       const {firstName, lastName, emailAddress} = data?.customer ?? {};
-      return (
-        [firstName, lastName].filter(Boolean).join(' ') ||
-        emailAddress?.emailAddress ||
-        null
-      );
+      const name = [firstName, lastName].filter(Boolean).join(' ') || null;
+      const email = emailAddress?.emailAddress ?? null;
+      if (!name && !email) return null;
+
+      const contact = data?.customer?.companyContacts?.nodes?.[0] ?? null;
+      const company = contact?.company ?? null;
+      const locations: CustomerCompanyLocation[] = contact
+        ? contact.locations.nodes.map((loc: any) => ({
+            id: loc.id,
+            name: loc.name,
+            role:
+              loc.roleAssignments.nodes.find(
+                (ra: any) => ra.contact.id === contact.id,
+              )?.role.name ?? null,
+          }))
+        : [];
+
+      // Hydrogen's own purpose-built B2B "buyer" session slot (not a custom
+      // session key) — the same value cart.updateBuyerIdentity() reads from
+      // internally when merging buyer identity into cart mutations.
+      const buyer = await customerAccount.getBuyer();
+      const selectedLocationId = buyer?.companyLocationId ?? null;
+      const selectedLocation =
+        locations.find((location) => location.id === selectedLocationId) ??
+        (locations.length === 1 ? locations[0] : null);
+      const needsLocationSelection =
+        !!company && locations.length > 1 && !selectedLocation;
+
+      return {
+        name: name ?? email!,
+        email: email ?? '',
+        company,
+        locations,
+        selectedLocation,
+        needsLocationSelection,
+      };
     })
     .catch(() => null);
 
   return {
     cart: cart.get(),
     footer,
-    customerName,
+    customer,
   };
 }
 

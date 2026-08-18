@@ -14,6 +14,28 @@
   --font-family-sans: 'Outfit', sans-serif;
   --animate-accordion-down: accordion-down 200ms ease-out;
   --animate-accordion-up: accordion-up 200ms ease-out;
+
+  /*
+   * shadcn/base-ui component tokens. Mapped to the brand palette above and
+   * to the slate/red shades already used ad hoc across the app, so
+   * shadcn-generated components (Accordion, Button, Popover, ...) render
+   * correctly without needing per-usage color overrides.
+   */
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
+  --color-primary: var(--color-navy);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f1f5f9;
+  --color-secondary-foreground: #0f172a;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-accent: #f1f5f9;
+  --color-destructive: #dc2626;
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: var(--color-teal);
 }
 
 @keyframes accordion-down {

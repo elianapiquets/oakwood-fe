@@ -5,10 +5,13 @@ import type {
   FooterQuery,
   HeaderQuery,
 } from 'storefrontapi.generated';
+import type {CustomerData} from '~/root';
 import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
 import {Header, HeaderMenu} from '~/components/Header';
 import {CartMain} from '~/components/CartMain';
+import {LocationSelectionDialog} from '~/components/Account/LocationSelectionDialog';
+import {LocationSelectionProvider} from '~/components/Account/LocationSelectionContext';
 import {
   SEARCH_ENDPOINT,
   SearchFormPredictive,
@@ -20,7 +23,7 @@ interface PageLayoutProps {
   footer: Promise<FooterQuery | null>;
   header: HeaderQuery;
   publicStoreDomain: string;
-  customerName: Promise<string | null>;
+  customer: Promise<CustomerData | null>;
   children?: React.ReactNode;
 }
 
@@ -30,28 +33,31 @@ export function PageLayout({
   footer,
   header,
   publicStoreDomain,
-  customerName,
+  customer,
 }: PageLayoutProps) {
   return (
-    <Aside.Provider>
-      <CartAside cart={cart} />
-      <SearchAside />
-      <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
-      {header && (
-        <Header
+    <LocationSelectionProvider>
+      <Aside.Provider>
+        <CartAside cart={cart} />
+        <SearchAside />
+        <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
+        <LocationSelectionDialog customer={customer} />
+        {header && (
+          <Header
+            header={header}
+            cart={cart}
+            publicStoreDomain={publicStoreDomain}
+            customer={customer}
+          />
+        )}
+        <main className={'min-h-[calc(100vh-338px)]'}>{children}</main>
+        <Footer
+          footer={footer}
           header={header}
-          cart={cart}
           publicStoreDomain={publicStoreDomain}
-          customerName={customerName}
         />
-      )}
-      <main className={'min-h-[calc(100vh-338px)]'}>{children}</main>
-      <Footer
-        footer={footer}
-        header={header}
-        publicStoreDomain={publicStoreDomain}
-      />
-    </Aside.Provider>
+      </Aside.Provider>
+    </LocationSelectionProvider>
   );
 }
 

@@ -9,49 +9,51 @@ import svgr from 'vite-plugin-svgr';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
-  define: {
-    'process.env.BACKEND_URL': JSON.stringify(
-      process.env.BACKEND_URL ?? env.BACKEND_URL ?? 'http://localhost:3100',
-    ),
-    'process.env.BACKEND_API_KEY': JSON.stringify(
-      process.env.BACKEND_API_KEY ?? env.BACKEND_API_KEY ?? '',
-    ),
-  },
-  plugins: [svgr(), tailwindcss(), hydrogen(), oxygen(), reactRouter()],
-  resolve: {
-    alias: {
-      // Vite's native tsconfig path resolver does not cover JavaScript
-      // projects that use jsconfig.json, so define Hydrogen's app alias here.
-      '~': fileURLToPath(new URL('./app', import.meta.url)),
+    define: {
+      'process.env.BACKEND_URL': JSON.stringify(
+        process.env.BACKEND_URL ?? env.BACKEND_URL ?? 'http://localhost:3100',
+      ),
+      'process.env.BACKEND_API_KEY': JSON.stringify(
+        process.env.BACKEND_API_KEY ?? env.BACKEND_API_KEY ?? '',
+      ),
     },
-    tsconfigPaths: true,
-  },
-  build: {
-    // Allow a strict Content-Security-Policy
-    // without inlining assets as base64:
-    assetsInlineLimit: 0,
-  },
-  ssr: {
-    optimizeDeps: {
-      /**
-       * Include dependencies here if they throw CJS<>ESM errors.
-       * For example, for the following error:
-       *
-       * > ReferenceError: module is not defined
-       * >   at /Users/.../node_modules/example-dep/index.js:1:1
-       *
-       * Include 'example-dep' in the array below.
-       * @see https://vitejs.dev/config/dep-optimization-options
-       */
-      include: [
-        'react-router > set-cookie-parser',
-        'react-router > cookie',
-        'react-router',
-      ],
+    plugins: [svgr(), tailwindcss(), hydrogen(), oxygen(), reactRouter()],
+    resolve: {
+      alias: {
+        // Vite's native tsconfig path resolver does not cover JavaScript
+        // projects that use jsconfig.json, so define Hydrogen's app alias here.
+        '~': fileURLToPath(new URL('./app', import.meta.url)),
+      },
+      tsconfigPaths: true,
     },
-  },
-  server: {
-    allowedHosts: ['.tryhydrogen.dev', '.trycloudflare.com'],
-  },
+    build: {
+      // Allow a strict Content-Security-Policy
+      // without inlining assets as base64:
+      assetsInlineLimit: 0,
+    },
+    ssr: {
+      optimizeDeps: {
+        /**
+         * Include dependencies here if they throw CJS<>ESM errors.
+         * For example, for the following error:
+         *
+         * > ReferenceError: module is not defined
+         * >   at /Users/.../node_modules/example-dep/index.js:1:1
+         *
+         * Include 'example-dep' in the array below.
+         * @see https://vitejs.dev/config/dep-optimization-options
+         */
+        include: [
+          'use-sync-external-store/shim/with-selector',
+          'use-sync-external-store/shim',
+          'react-router > set-cookie-parser',
+          'react-router > cookie',
+          'react-router',
+        ],
+      },
+    },
+    server: {
+      allowedHosts: ['.tryhydrogen.dev', '.trycloudflare.com'],
+    },
   };
 });

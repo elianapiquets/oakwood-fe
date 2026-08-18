@@ -1,6 +1,6 @@
 import {createHydrogenContext} from '@shopify/hydrogen';
 import {AppSession} from '~/lib/session';
-import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
+import {CART_QUERY_FRAGMENT, CART_MUTATE_FRAGMENT} from '~/lib/fragments';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {getLocaleFromRequest} from '~/lib/i18n';
 
@@ -57,6 +57,7 @@ export async function createHydrogenRouterContext(
       i18n: getLocaleFromRequest(request),
       cart: {
         queryFragment: CART_QUERY_FRAGMENT,
+        mutateFragment: CART_MUTATE_FRAGMENT,
       },
     },
     additionalContext,
