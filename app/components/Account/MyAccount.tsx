@@ -11,9 +11,14 @@ const Company = lazy(() =>
 
 type CustomerMetafield = {key: string; value: string} | null;
 
+type RoleAssignment = {role: {name: string} | null; contact: {id: string}};
+
 type CompanyContact = {
   id: string;
   company: {id: string; name: string};
+  locations?: {
+    nodes: Array<{roleAssignments: {nodes: RoleAssignment[]}}>;
+  } | null;
 };
 
 type Customer = {
@@ -46,15 +51,30 @@ type MyAccountProps = {
 function MyAccount({customer, allCompanies = []}: MyAccountProps) {
   const email = customer?.emailAddress?.emailAddress ?? '';
 
-  const memberCompanyIds = new Set(
-    (customer?.companyContacts?.nodes ?? []).map((c) => c.company.id),
-  );
+  const companyContacts = customer?.companyContacts?.nodes ?? [];
+
+  // A customer can only ever belong to one real company (Shopify enforces
+  // this), so a role lookup by company id is unambiguous.
+  const companyRoles: Record<string, string> = {};
+  for (const contact of companyContacts) {
+    const roleAssignment = (contact.locations?.nodes ?? [])
+      .flatMap((location) => location.roleAssignments.nodes)
+      .find((assignment) => assignment.contact.id === contact.id);
+    companyRoles[contact.company.id] = roleAssignment?.role?.name ?? 'Member';
+  }
+  const memberCompanyIds = new Set(Object.keys(companyRoles));
 
   const metaMap: Record<string, string> = {};
   for (const m of customer?.metafields ?? []) {
     if (m) metaMap[m.key] = m.value;
   }
   const savedCompanyId = metaMap.active_company_id ?? null;
+
+  // The customer's real Shopify B2B company membership is the source of
+  // truth for "which company is active" — the active_company_id metafield
+  // is only a fallback for customers who aren't a real company contact yet.
+  const [realCompanyId] = memberCompanyIds;
+  const initialCompanyId = realCompanyId ?? savedCompanyId;
 
   return (
     <div className="flex flex-col gap-4">
@@ -75,12 +95,12 @@ function MyAccount({customer, allCompanies = []}: MyAccountProps) {
 
       <Suspense fallback={null}>
         <UserInformation customer={customer} />
-        {/*<Company*/}
-        {/*  customerId={customer?.id}*/}
-        {/*  allCompanies={allCompanies}*/}
-        {/*  memberCompanyIds={memberCompanyIds}*/}
-        {/*  savedCompanyId={savedCompanyId}*/}
-        {/*/>*/}
+        <Company
+          customerId={customer?.id}
+          allCompanies={allCompanies}
+          companyRoles={companyRoles}
+          savedCompanyId={initialCompanyId}
+        />
       </Suspense>
     </div>
   );

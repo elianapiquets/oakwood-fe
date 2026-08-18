@@ -163,6 +163,16 @@ export async function loader({context}: Route.LoaderArgs) {
             nodes {
               id
               company { id name }
+              locations(first: 10) {
+                nodes {
+                  roleAssignments(first: 10) {
+                    nodes {
+                      role { name }
+                      contact { id }
+                    }
+                  }
+                }
+              }
             }
           }
           metafields(identifiers: [

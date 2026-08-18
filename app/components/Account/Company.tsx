@@ -6,11 +6,11 @@ type Company = {id: string; name: string};
 type CompanyProps = {
   customerId?: string | null;
   allCompanies: Company[];
-  memberCompanyIds: Set<string>;
+  companyRoles: Record<string, string>;
   savedCompanyId: string | null;
 };
 
-function Company({customerId, allCompanies, memberCompanyIds, savedCompanyId}: CompanyProps) {
+function Company({customerId, allCompanies, companyRoles, savedCompanyId}: CompanyProps) {
   const fetcher = useFetcher();
 
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(savedCompanyId);
@@ -69,7 +69,7 @@ function Company({customerId, allCompanies, memberCompanyIds, savedCompanyId}: C
           <div className="flex flex-col gap-2">
             {allCompanies.map((company) => {
               const isSelected = selectedCompanyId === company.id;
-              const isMember = memberCompanyIds.has(company.id);
+              const role = companyRoles[company.id];
               return (
                 <button
                   key={company.id}
@@ -87,9 +87,9 @@ function Company({customerId, allCompanies, memberCompanyIds, savedCompanyId}: C
                     }`}
                   />
                   <span className="text-sm font-medium flex-1">{company.name}</span>
-                  {isMember && (
+                  {role && (
                     <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full">
-                      member
+                      {role}
                     </span>
                   )}
                 </button>
