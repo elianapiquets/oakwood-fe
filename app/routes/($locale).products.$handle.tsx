@@ -16,6 +16,8 @@ import {ProductBreadcrumb} from '~/components/product/ProductBreadcrumb';
 import {ProductGallery} from '~/components/product/ProductGallery';
 import {ProductInfoColumn} from '~/components/product/ProductInfoColumn';
 import {ProductDetailsSection} from '~/components/product/ProductDetailsSection';
+import type {SafetyDataSheetData} from '~/components/product/ProductSafetyInformation';
+import type {CertificateOfAnalysis} from '~/components/product/ProductCertificatesOfAnalysis';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
   return getSeoMeta(getRootSeo(matches), data?.seo);
@@ -27,12 +29,17 @@ export async function loader({context, params, request}: Route.LoaderArgs) {
 
   if (!handle) throw new Error('Expected product handle to be defined');
 
-  const [{product}, backendProduct] = await Promise.all([
-    storefront.query(PRODUCT_QUERY, {
-      variables: {handle, selectedOptions: getSelectedProductOptions(request)},
-    }),
-    fetchProductByHandle(handle),
-  ]);
+  const [{product}, backendProduct, safetyDataSheetsResult, certificatesResult] =
+    await Promise.all([
+      storefront.query(PRODUCT_QUERY, {
+        variables: {handle, selectedOptions: getSelectedProductOptions(request)},
+      }),
+      fetchProductByHandle(handle),
+      // No server-side filter exists for metaobjects by field value, so we
+      // fetch all entries of each type and filter by product below.
+      storefront.query(SAFETY_DATA_SHEET_QUERY, {variables: {first: 50}}),
+      storefront.query(CERTIFICATES_OF_ANALYSIS_QUERY, {variables: {first: 50}}),
+    ]);
 
   if (!product?.id) {
     const redirectData = await storefront
@@ -85,13 +92,60 @@ export async function loader({context, params, request}: Route.LoaderArgs) {
     },
   };
 
-  return {product, chemistry: backendProduct?.chemistry ?? null, seo};
+  const safetyDataSheetEntry = (
+    safetyDataSheetsResult.metaobjects?.nodes ?? []
+  ).find(
+    (entry: any) =>
+      entry.fields.find((field: any) => field.key === 'product')?.reference
+        ?.id === product.id,
+  );
+
+  const getField = (key: string) =>
+    safetyDataSheetEntry?.fields.find((field: any) => field.key === key);
+
+  const safetyDataSheet: SafetyDataSheetData | null = safetyDataSheetEntry
+    ? {
+        title: getField('title')?.value ?? null,
+        description: getField('description')?.value ?? null,
+        fileUrl: getField('file')?.reference?.url ?? null,
+      }
+    : null;
+
+  const certificatesOfAnalysis: CertificateOfAnalysis[] = (
+    certificatesResult.metaobjects?.nodes ?? []
+  )
+    .filter(
+      (entry: any) =>
+        entry.fields.find((field: any) => field.key === 'product')?.reference
+          ?.id === product.id,
+    )
+    .map((entry: any) => {
+      const getCoaField = (key: string) =>
+        entry.fields.find((field: any) => field.key === key);
+      return {
+        id: entry.id,
+        lotNumber: getCoaField('lot_number')?.value ?? null,
+        dateIssued: getCoaField('date_issued')?.value ?? null,
+        fileUrl: getCoaField('file')?.reference?.url ?? null,
+      };
+    })
+    .sort((a, b) => (b.dateIssued ?? '').localeCompare(a.dateIssued ?? ''));
+
+  return {
+    product,
+    chemistry: backendProduct?.chemistry ?? null,
+    seo,
+    safetyDataSheet,
+    certificatesOfAnalysis,
+  };
 }
 
 // TODO: breadcrumb, gallery, identifiers, perks, quote callout, and the
 // details section below are still on mock data. See app/components/product/.
 export default function Product() {
-  const {product} = useLoaderData<typeof loader>();
+  const {product, safetyDataSheet, certificatesOfAnalysis} =
+    useLoaderData<typeof loader>();
+  const images = product.images?.nodes ?? [];
 
   const selectedVariant = useOptimisticVariant(
     product.selectedOrFirstAvailableVariant,
@@ -109,7 +163,7 @@ export default function Product() {
     <div className="w-full px-8 py-6">
       <ProductBreadcrumb />
       <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-2">
-        <ProductGallery />
+        <ProductGallery images={images} />
         <ProductInfoColumn
           price={selectedVariant?.price}
           compareAtPrice={selectedVariant?.compareAtPrice}
@@ -120,7 +174,10 @@ export default function Product() {
         />
       </div>
       <div className="mt-12">
-        <ProductDetailsSection />
+        <ProductDetailsSection
+          safetyDataSheet={safetyDataSheet}
+          certificatesOfAnalysis={certificatesOfAnalysis}
+        />
       </div>
     </div>
   );
@@ -173,6 +230,16 @@ const PRODUCT_FRAGMENT = `#graphql
     description
     encodedVariantExistence
     encodedVariantAvailability
+    images(first: 12) {
+      nodes {
+        __typename
+        id
+        url
+        altText
+        width
+        height
+      }
+    }
     options {
       name
       optionValues {
@@ -216,6 +283,66 @@ const PRODUCT_QUERY = `#graphql
     }
   }
   ${PRODUCT_FRAGMENT}
+` as const;
+
+const SAFETY_DATA_SHEET_QUERY = `#graphql
+  query SafetyDataSheets($first: Int!) {
+    metaobjects(type: "safety_data_sheet", first: $first) {
+      nodes {
+        id
+        handle
+        type
+        fields {
+          key
+          value
+          reference {
+            ... on Product {
+              id
+              handle
+            }
+            ... on GenericFile {
+              id
+              url
+              mimeType
+            }
+            ... on MediaImage {
+              id
+              image {
+                url
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+` as const;
+
+const CERTIFICATES_OF_ANALYSIS_QUERY = `#graphql
+  query CertificatesOfAnalysis($first: Int!) {
+    metaobjects(type: "certificates_of_analysis", first: $first) {
+      nodes {
+        id
+        handle
+        type
+        fields {
+          key
+          value
+          reference {
+            ... on Product {
+              id
+              handle
+            }
+            ... on GenericFile {
+              id
+              url
+              mimeType
+            }
+          }
+        }
+      }
+    }
+  }
 ` as const;
 
 const URL_REDIRECTS_QUERY = `#graphql
