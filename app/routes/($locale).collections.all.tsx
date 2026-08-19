@@ -10,7 +10,7 @@ export const meta: Route.MetaFunction = ({data, matches}) => {
 };
 
 export async function loader({context}: Route.LoaderArgs) {
-  const catalog = await loadCatalogData(context.storefront);
+  const catalog = await loadCatalogData(context);
   const {pathPrefix} = context.storefront.i18n;
 
   const seo: SeoConfig = {

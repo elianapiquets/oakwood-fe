@@ -1,7 +1,9 @@
+import type {CustomerAccount, Storefront} from '@shopify/hydrogen';
 import {
   CATALOG_COLLECTIONS_QUERY,
   CATALOG_COLLECTION_QUERY,
 } from '~/graphql/catalog';
+import {getBuyerContext} from '~/lib/buyer';
 import type {CatalogSidebarCollection} from '~/components/catalog/CatalogSidebar';
 import type {CatalogTableProduct} from '~/components/catalog/CatalogTable';
 
@@ -15,18 +17,29 @@ export interface CatalogData {
  * Loads the sidebar's full collection list plus one collection's detail
  * (title/description/products) from the Storefront API. When `handle` is
  * omitted, defaults to the first collection in the list.
+ *
+ * Both queries are contextualized with the B2B buyer so that anything
+ * price-list dependent (pricing, quantity rules, catalog visibility) reflects
+ * the company location the customer is currently ordering for.
  */
 export async function loadCatalogData(
-  storefront: {query: (query: string, options?: {variables?: object}) => Promise<any>},
+  context: {storefront: Storefront; customerAccount: CustomerAccount},
   handle?: string,
 ): Promise<CatalogData> {
-  const {collections} = await storefront.query(CATALOG_COLLECTIONS_QUERY);
+  const {storefront} = context;
+  const {buyer, cache} = await getBuyerContext(context);
+
+  const {collections} = await storefront.query(CATALOG_COLLECTIONS_QUERY, {
+    variables: {buyer},
+    cache,
+  });
   const targetHandle = handle ?? collections.nodes[0]?.handle;
 
   const collectionDetail = targetHandle
     ? (
         await storefront.query(CATALOG_COLLECTION_QUERY, {
-          variables: {handle: targetHandle},
+          variables: {handle: targetHandle, buyer},
+          cache,
         })
       ).collection
     : null;

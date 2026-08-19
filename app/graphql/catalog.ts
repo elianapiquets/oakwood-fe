@@ -1,8 +1,9 @@
 export const CATALOG_COLLECTIONS_QUERY = `#graphql
   query CatalogCollections(
+    $buyer: BuyerInput
     $country: CountryCode
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+  ) @inContext(country: $country, language: $language, buyer: $buyer) {
     collections(first: 20) {
       nodes {
         id
@@ -15,10 +16,11 @@ export const CATALOG_COLLECTIONS_QUERY = `#graphql
 
 export const CATALOG_COLLECTION_QUERY = `#graphql
   query CatalogCollection(
+    $buyer: BuyerInput
     $handle: String!
     $country: CountryCode
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+  ) @inContext(country: $country, language: $language, buyer: $buyer) {
     collection(handle: $handle) {
       title
       description

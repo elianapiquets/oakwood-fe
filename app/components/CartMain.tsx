@@ -3,6 +3,7 @@ import {Link} from 'react-router';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
 import {CartLineItem, type CartLine} from '~/components/CartLineItem';
+import {CartLocationNotice} from '~/components/CartLocationNotice';
 import {CartSummary} from './CartSummary';
 
 export type CartLayout = 'page' | 'aside';
@@ -55,6 +56,7 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
       aria-label={layout === 'page' ? 'Cart page' : 'Cart drawer'}
     >
       <CartEmpty hidden={linesCount} layout={layout} />
+      {cartHasItems && <CartLocationNotice cart={originalCart} />}
       <div className="cart-details">
         <p id="cart-lines" className="sr-only">
           Line items

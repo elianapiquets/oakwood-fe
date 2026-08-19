@@ -9,6 +9,7 @@ import {
   getAdjacentAndFirstAvailableVariants,
   useSelectedOptionInUrlParam,
 } from '@shopify/hydrogen';
+import {getBuyerContext} from '~/lib/buyer';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {fetchProductByHandle} from '~/lib/backend';
 import {getRootSeo, truncate} from '~/lib/seo';
@@ -29,10 +30,20 @@ export async function loader({context, params, request}: Route.LoaderArgs) {
 
   if (!handle) throw new Error('Expected product handle to be defined');
 
+  // B2B pricing is per company location, so the product query has to be
+  // contextualized with the buyer. `cache` is CacheNone whenever a buyer is
+  // present — price-list pricing must never come from a shared cache entry.
+  const {buyer, cache} = await getBuyerContext(context);
+
   const [{product}, backendProduct, safetyDataSheetsResult, certificatesResult] =
     await Promise.all([
       storefront.query(PRODUCT_QUERY, {
-        variables: {handle, selectedOptions: getSelectedProductOptions(request)},
+        variables: {
+          handle,
+          selectedOptions: getSelectedProductOptions(request),
+          buyer,
+        },
+        cache,
       }),
       fetchProductByHandle(handle),
       // No server-side filter exists for metaobjects by field value, so we
@@ -273,11 +284,12 @@ const PRODUCT_FRAGMENT = `#graphql
 
 const PRODUCT_QUERY = `#graphql
   query ProductShopify(
+    $buyer: BuyerInput
     $country: CountryCode
     $handle: String!
     $language: LanguageCode
     $selectedOptions: [SelectedOptionInput!]!
-  ) @inContext(country: $country, language: $language) {
+  ) @inContext(country: $country, language: $language, buyer: $buyer) {
     product(handle: $handle) {
       ...ProductShopify
     }

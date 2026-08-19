@@ -13,7 +13,7 @@ export async function loader({params, context}: Route.LoaderArgs) {
   const {handle} = params;
   if (!handle) throw redirect('/collections');
 
-  const catalog = await loadCatalogData(context.storefront, handle);
+  const catalog = await loadCatalogData(context, handle);
   if (!catalog.collection) {
     throw new Response(`Collection ${handle} not found`, {status: 404});
   }

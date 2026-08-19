@@ -31,7 +31,12 @@ export default {
       const response = await handleRequest(request);
 
       if (hydrogenContext.session.isPending) {
-        response.headers.set(
+        // `append`, not `set`: an action can emit its own Set-Cookie in the
+        // same response (e.g. `cart.setCartId()` after recreating the cart at
+        // a new company location, which also marks the session pending via
+        // `setBuyer`). `Headers.set` would replace that cookie with the
+        // session cookie and silently strand the browser on the old cart.
+        response.headers.append(
           'Set-Cookie',
           await hydrogenContext.session.commit(),
         );
