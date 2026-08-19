@@ -18,6 +18,7 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
 import {PageLayout} from './components/PageLayout';
+import {useRevalidateOnPageRestore} from '~/lib/revalidate';
 
 export type RootLoader = typeof loader;
 
@@ -64,7 +65,11 @@ export function links() {
       href: 'https://shop.app',
     },
     {rel: 'preconnect', href: 'https://fonts.googleapis.com'},
-    {rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous'},
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.gstatic.com',
+      crossOrigin: 'anonymous',
+    },
     {
       rel: 'stylesheet',
       href: 'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap',
@@ -124,9 +129,7 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
     titleTemplate: `%s | ${shop.name}`,
     description: shop.description,
     url: shop.primaryDomain.url,
-    ...(shop.brand?.logo?.image?.url
-      ? {media: shop.brand.logo.image.url}
-      : {}),
+    ...(shop.brand?.logo?.image?.url ? {media: shop.brand.logo.image.url} : {}),
   };
 
   return {header, seo};
@@ -272,6 +275,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
 
 export default function App() {
   const data = useRouteLoaderData<RootLoader>('root');
+  useRevalidateOnPageRestore();
 
   if (!data) {
     return <Outlet />;

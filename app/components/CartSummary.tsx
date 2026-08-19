@@ -2,6 +2,7 @@ import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import type {CartLayout} from '~/components/CartMain';
 import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
 import {useEffect, useId, useRef, useState} from 'react';
+import {buildCheckoutUrl} from '~/lib/checkout';
 import {useFetcher} from 'react-router';
 
 type CartSummaryProps = {
@@ -41,17 +42,33 @@ export function CartSummary({cart, layout}: CartSummaryProps) {
         giftCardHeadingId={giftCardHeadingId}
         giftCardInputId={giftCardInputId}
       />
-      <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} />
+      <CartCheckoutActions
+        checkoutUrl={cart?.checkoutUrl}
+        companyLocationId={
+          cart?.buyerIdentity?.purchasingCompany?.location?.id ?? null
+        }
+      />
     </div>
   );
 }
 
-function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
+function CartCheckoutActions({
+  checkoutUrl,
+  companyLocationId,
+}: {
+  checkoutUrl?: string;
+  companyLocationId?: string | null;
+}) {
   if (!checkoutUrl) return null;
+
+  // A plain anchor on purpose: setting the shop-side company location needs a
+  // real top-level navigation. A cross-origin fetch wouldn't carry or set
+  // Shopify's session cookie.
+  const href = buildCheckoutUrl(checkoutUrl, companyLocationId);
 
   return (
     <div>
-      <a href={checkoutUrl} target="_self">
+      <a href={href} target="_self">
         <p>Continue to Checkout &rarr;</p>
       </a>
       <br />
