@@ -1,5 +1,14 @@
-import {data} from 'react-router';
+import {data, redirect} from 'react-router';
 import type {Route} from './+types/account.select-location';
+
+// This route is action-only (submitted via fetcher.Form POST from
+// LocationSelectionDialog). It has no UI of its own, so a stray GET here
+// (e.g. a revalidation/prefetch race before client-side routing has fully
+// taken over) has nothing to render — send it somewhere real instead of
+// letting React Router throw "no loader for this route".
+export async function loader() {
+  return redirect('/account');
+}
 
 // Not persisted to Shopify (no customer metafield/mutation) — this is purely
 // a local navigation/purchasing context for this browser session, per design.
