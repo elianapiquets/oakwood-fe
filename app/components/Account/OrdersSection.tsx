@@ -59,11 +59,14 @@ export function OrdersSection({
           activeLocationId={activeLocationId}
         />
       )}
-      {scopedToOwnOrders && (
+      {/* States the role and what it can see, so a short list reads as
+          intentional rather than broken. Shown for both roles. */}
+      {roleName && (
         <p className="text-xs text-slate-500">
-          Showing only orders you placed at this location
-          {roleName ? ` — your role here is ${roleName}` : ''}. A location admin
-          can see every order for the location.
+          <span className="font-semibold text-slate-700">{roleName}</span>,{' '}
+          {scopedToOwnOrders
+            ? 'you only see your orders'
+            : 'you can see all orders'}
         </p>
       )}
     </>

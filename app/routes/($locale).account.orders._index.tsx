@@ -4,15 +4,16 @@ import {
   getSeoMeta,
   type SeoConfig,
 } from '@shopify/hydrogen';
+import type {PermittedOperation} from '@shopify/hydrogen/customer-account-api-types';
 import type {Route} from './+types/($locale).account.orders._index';
 import {getRootSeo} from '~/lib/seo';
 import {
   buildOrderSearchQuery,
   locationIdToParam,
   parseOrderFilters,
-  roleCanViewAllLocationOrders,
   ORDER_FILTER_FIELDS,
 } from '~/lib/orderFilters';
+import {roleCanViewAllLocationOrders} from '~/lib/b2bRoles';
 import {OrdersSection} from '~/components/Account/OrdersSection';
 import {getPathPrefix} from '~/lib/i18n';
 
@@ -256,7 +257,7 @@ export async function loader({context, request}: Route.LoaderArgs) {
         contact?: {id: string} | null;
         role?: {
           name?: string | null;
-          resourcePermission?: string[] | null;
+          resourcePermission?: PermittedOperation[] | null;
         } | null;
       }>;
     } | null;

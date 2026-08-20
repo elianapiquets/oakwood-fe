@@ -36,27 +36,6 @@ export function locationIdToParam(gid: string): string {
 }
 
 /**
- * Whether a role may see every order at its location, or only its own.
- *
- * Reads Shopify's permission model rather than the role's name, which can be
- * renamed in Admin. Verified against this store: a "Location admin" role
- * returns ["VIEW","ADD"] for ORDER, while "Ordering only" returns an empty
- * list — so holding any view permission is the signal.
- *
- * Restrictive on purpose: an unreadable role or empty list means own-orders
- * only. Being too restrictive shows an admin fewer orders; being too permissive
- * would show one buyer another buyer's orders.
- */
-export function roleCanViewAllLocationOrders(
-  orderPermissions: readonly string[] | null | undefined,
-): boolean {
-  if (!orderPermissions?.length) return false;
-  return orderPermissions.some((permission) =>
-    ['VIEW', 'ALL', 'EDIT', 'DELETE'].includes(permission),
-  );
-}
-
-/**
  * Parameters for filtering customer orders, see: https://shopify.dev/docs/api/customer/latest/queries/customer#returns-Customer.fields.orders.arguments.query
  */
 export interface OrderFilterParams {
