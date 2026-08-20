@@ -1,12 +1,13 @@
 import {redirect, useLoaderData} from 'react-router';
-import type {Route} from './+types/collections.$handle';
+import type {Route} from './+types/($locale).collections.$handle';
 import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
 import {getRootSeo, truncate} from '~/lib/seo';
 import {loadCatalogData} from '~/lib/catalog';
 import {CatalogPageLayout} from '~/components/catalog/CatalogPageLayout';
+import {getPathPrefix} from '~/lib/i18n';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
-  return getSeoMeta(getRootSeo(matches), data?.seo);
+  return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];
 };
 
 export async function loader({params, context}: Route.LoaderArgs) {
@@ -18,7 +19,7 @@ export async function loader({params, context}: Route.LoaderArgs) {
     throw new Response(`Collection ${handle} not found`, {status: 404});
   }
 
-  const {pathPrefix} = context.storefront.i18n;
+  const pathPrefix = getPathPrefix(context.storefront);
   const description = truncate(catalog.collection.description);
 
   const seo: SeoConfig = {

@@ -1,5 +1,5 @@
 import {redirect, useLoaderData} from 'react-router';
-import type {Route} from './+types/products.$handle';
+import type {Route} from './+types/($locale).products.$handle';
 import {
   getSelectedProductOptions,
   getSeoMeta,
@@ -19,9 +19,10 @@ import {ProductInfoColumn} from '~/components/product/ProductInfoColumn';
 import {ProductDetailsSection} from '~/components/product/ProductDetailsSection';
 import type {SafetyDataSheetData} from '~/components/product/ProductSafetyInformation';
 import type {CertificateOfAnalysis} from '~/components/product/ProductCertificatesOfAnalysis';
+import {getPathPrefix} from '~/lib/i18n';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
-  return getSeoMeta(getRootSeo(matches), data?.seo);
+  return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];
 };
 
 export async function loader({context, params, request}: Route.LoaderArgs) {
@@ -35,22 +36,26 @@ export async function loader({context, params, request}: Route.LoaderArgs) {
   // present — price-list pricing must never come from a shared cache entry.
   const {buyer, cache} = await getBuyerContext(context);
 
-  const [{product}, backendProduct, safetyDataSheetsResult, certificatesResult] =
-    await Promise.all([
-      storefront.query(PRODUCT_QUERY, {
-        variables: {
-          handle,
-          selectedOptions: getSelectedProductOptions(request),
-          buyer,
-        },
-        cache,
-      }),
-      fetchProductByHandle(handle),
-      // No server-side filter exists for metaobjects by field value, so we
-      // fetch all entries of each type and filter by product below.
-      storefront.query(SAFETY_DATA_SHEET_QUERY, {variables: {first: 50}}),
-      storefront.query(CERTIFICATES_OF_ANALYSIS_QUERY, {variables: {first: 50}}),
-    ]);
+  const [
+    {product},
+    backendProduct,
+    safetyDataSheetsResult,
+    certificatesResult,
+  ] = await Promise.all([
+    storefront.query(PRODUCT_QUERY, {
+      variables: {
+        handle,
+        selectedOptions: getSelectedProductOptions(request),
+        buyer,
+      },
+      cache,
+    }),
+    fetchProductByHandle(handle),
+    // No server-side filter exists for metaobjects by field value, so we
+    // fetch all entries of each type and filter by product below.
+    storefront.query(SAFETY_DATA_SHEET_QUERY, {variables: {first: 50}}),
+    storefront.query(CERTIFICATES_OF_ANALYSIS_QUERY, {variables: {first: 50}}),
+  ]);
 
   if (!product?.id) {
     const redirectData = await storefront
@@ -60,10 +65,11 @@ export async function loader({context, params, request}: Route.LoaderArgs) {
       })
       .catch(() => null);
     const target = (redirectData as any)?.urlRedirects?.nodes?.[0]?.target as
-      | string
-      | undefined;
+      string | undefined;
     if (target) {
-      const path = target.startsWith('http') ? new URL(target).pathname : target;
+      const path = target.startsWith('http')
+        ? new URL(target).pathname
+        : target;
       throw redirect(path, 301);
     }
     throw new Response(null, {status: 404});
@@ -75,7 +81,7 @@ export async function loader({context, params, request}: Route.LoaderArgs) {
   const price = variant?.price;
   const image = variant?.image?.url;
   const description = product.seo?.description ?? truncate(product.description);
-  const {pathPrefix} = context.storefront.i18n;
+  const pathPrefix = getPathPrefix(context.storefront);
 
   const seo: SeoConfig = {
     title: product.seo?.title ?? product.title,
@@ -118,7 +124,14 @@ export async function loader({context, params, request}: Route.LoaderArgs) {
     ? {
         title: getField('title')?.value ?? null,
         description: getField('description')?.value ?? null,
-        fileUrl: getField('file')?.reference?.url ?? null,
+        // `reference` is a union; only GenericFile has a top-level `url`
+        // (MediaImage nests it under `image`).
+        fileUrl: (() => {
+          const reference = getField('file')?.reference;
+          return reference && 'url' in reference
+            ? (reference.url ?? null)
+            : null;
+        })(),
       }
     : null;
 
@@ -156,7 +169,11 @@ export async function loader({context, params, request}: Route.LoaderArgs) {
 export default function Product() {
   const {product, safetyDataSheet, certificatesOfAnalysis} =
     useLoaderData<typeof loader>();
-  const images = product.images?.nodes ?? [];
+  // ProductGallery needs a concrete id and url; both are nullable in the
+  // Storefront types, so drop incomplete images rather than casting.
+  const images = (product.images?.nodes ?? []).flatMap((image) =>
+    image.id && image.url ? [{...image, id: image.id, url: image.url}] : [],
+  );
 
   const selectedVariant = useOptimisticVariant(
     product.selectedOrFirstAvailableVariant,

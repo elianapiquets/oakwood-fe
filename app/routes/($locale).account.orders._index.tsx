@@ -4,7 +4,7 @@ import {
   getSeoMeta,
   type SeoConfig,
 } from '@shopify/hydrogen';
-import type {Route} from './+types/account.orders._index';
+import type {Route} from './+types/($locale).account.orders._index';
 import {getRootSeo} from '~/lib/seo';
 import {
   buildOrderSearchQuery,
@@ -13,6 +13,7 @@ import {
   ORDER_FILTER_FIELDS,
 } from '~/lib/orderFilters';
 import {OrdersSection} from '~/components/Account/OrdersSection';
+import {getPathPrefix} from '~/lib/i18n';
 
 // Every column the orders table renders. Spread into both connections below so
 // the two scopes can share one row component.
@@ -164,7 +165,7 @@ const CUSTOMER_ORDERS_QUERY = `#graphql-customer-account
 ` as const;
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
-  return getSeoMeta(getRootSeo(matches), data?.seo);
+  return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];
 };
 
 export async function loader({context, request}: Route.LoaderArgs) {
@@ -231,7 +232,7 @@ export async function loader({context, request}: Route.LoaderArgs) {
     orders = data?.customer?.orders ?? null;
   }
 
-  const {pathPrefix} = storefront.i18n;
+  const pathPrefix = getPathPrefix(storefront);
   const seo: SeoConfig = {
     title: 'Orders',
     url: `${pathPrefix}/account/orders`,

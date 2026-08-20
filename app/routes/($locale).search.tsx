@@ -1,13 +1,14 @@
 import {useLoaderData} from 'react-router';
-import type {Route} from './+types/search';
+import type {Route} from './+types/($locale).search';
 import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';
 import {searchBackend, type SearchResult} from '~/lib/search';
 import {getRootSeo} from '~/lib/seo';
+import {getPathPrefix} from '~/lib/i18n';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
-  return getSeoMeta(getRootSeo(matches), data?.seo);
+  return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];
 };
 
 export async function loader({
@@ -20,7 +21,7 @@ export async function loader({
   const limit = isPredictive ? 8 : 20;
 
   const products = await searchBackend(term, limit);
-  const {pathPrefix} = context.storefront.i18n;
+  const pathPrefix = getPathPrefix(context.storefront);
 
   const seo: SeoConfig = {
     title: 'Search',

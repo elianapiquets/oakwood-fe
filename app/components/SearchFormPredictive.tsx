@@ -5,14 +5,14 @@ import {
   type Fetcher,
 } from 'react-router';
 import React, {useRef, useEffect} from 'react';
-import type {PredictiveSearchReturn} from '~/lib/search';
+import type {SearchResult} from '~/lib/search';
 import {useAside} from './Aside';
 
 type SearchFormPredictiveChildren = (args: {
   fetchResults: (event: React.ChangeEvent<HTMLInputElement>) => void;
   goToSearch: () => void;
   inputRef: React.MutableRefObject<HTMLInputElement | null>;
-  fetcher: Fetcher<PredictiveSearchReturn>;
+  fetcher: Fetcher<SearchResult>;
 }) => React.ReactNode;
 
 type SearchFormPredictiveProps = Omit<FormProps, 'children'> & {
@@ -29,7 +29,7 @@ export function SearchFormPredictive({
   className = 'predictive-search-form',
   ...props
 }: SearchFormPredictiveProps) {
-  const fetcher = useFetcher<PredictiveSearchReturn>({key: 'search'});
+  const fetcher = useFetcher<SearchResult>({key: 'search'});
   const inputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
   const aside = useAside();

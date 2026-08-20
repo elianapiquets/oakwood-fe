@@ -11,7 +11,8 @@ export type ProductListItem = {
       title: string;
       sku: string;
       availableForSale: boolean;
-      price?: {amount: string; currencyCode: string};
+      // The chemistry backend sends price as a plain string.
+      price?: string;
     }>;
   };
   chemistry?: BackendChemistry | null;

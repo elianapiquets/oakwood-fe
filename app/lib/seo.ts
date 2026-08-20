@@ -6,9 +6,11 @@ import type {SeoConfig} from '@shopify/hydrogen';
  * current route's own `seo` via `getSeoMeta(getRootSeo(matches), data?.seo)`.
  */
 export function getRootSeo(
-  matches: ReadonlyArray<{id: string; data?: unknown}>,
+  // Entries are optional because React Router types `matches` as a tuple whose
+  // trailing members may be undefined.
+  matches: ReadonlyArray<{id: string; data?: unknown} | undefined>,
 ): SeoConfig | undefined {
-  const root = matches.find((match) => match.id === 'root');
+  const root = matches.find((match) => match?.id === 'root');
   return (root?.data as {seo?: SeoConfig} | undefined)?.seo;
 }
 

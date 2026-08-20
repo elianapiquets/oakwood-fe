@@ -1,12 +1,13 @@
 import {useLoaderData, data, type HeadersFunction} from 'react-router';
-import type {Route} from './+types/cart';
+import type {Route} from './+types/($locale).cart';
 import type {CartQueryDataReturn, SeoConfig} from '@shopify/hydrogen';
 import {CartForm, getSeoMeta} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
 import {getRootSeo} from '~/lib/seo';
+import {getPathPrefix} from '~/lib/i18n';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
-  return getSeoMeta(getRootSeo(matches), data?.seo);
+  return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];
 };
 
 export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
@@ -100,18 +101,18 @@ export async function action({request, context}: Route.ActionArgs) {
 export async function loader({context}: Route.LoaderArgs) {
   const {cart, storefront} = context;
   const cartData = await cart.get();
-  const {pathPrefix} = storefront.i18n;
+  const pathPrefix = getPathPrefix(storefront);
 
   const seo: SeoConfig = {
     title: 'Cart',
     url: `${pathPrefix}/cart`,
   };
 
-  return {...cartData, seo};
+  return {cart: cartData, seo};
 }
 
 export default function Cart() {
-  const {seo: _seo, ...cart} = useLoaderData<typeof loader>();
+  const {cart} = useLoaderData<typeof loader>();
 
   return (
     <div className="cart">

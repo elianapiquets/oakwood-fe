@@ -13,7 +13,10 @@ export async function searchBackend(
   limit = 10,
 ): Promise<BackendProduct[]> {
   if (!q.trim()) return [];
-  return fetch(`${BACKEND_URL}/api/search?q=${encodeURIComponent(q)}&limit=${limit}`, {headers: BACKEND_HEADERS})
-    .then((r) => (r.ok ? r.json() : []))
+  return fetch(
+    `${BACKEND_URL}/api/search?q=${encodeURIComponent(q)}&limit=${limit}`,
+    {headers: BACKEND_HEADERS},
+  )
+    .then((r) => (r.ok ? (r.json() as Promise<BackendProduct[]>) : []))
     .catch(() => []);
 }

@@ -1,8 +1,9 @@
 import {Link, useLoaderData} from 'react-router';
-import type {Route} from './+types/policies.$handle';
+import type {Route} from './+types/($locale).policies.$handle';
 import {type Shop} from '@shopify/hydrogen/storefront-api-types';
 import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
 import {getRootSeo} from '~/lib/seo';
+import {getPathPrefix} from '~/lib/i18n';
 
 type SelectedPolicies = keyof Pick<
   Shop,
@@ -10,7 +11,7 @@ type SelectedPolicies = keyof Pick<
 >;
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
-  return getSeoMeta(getRootSeo(matches), data?.seo);
+  return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];
 };
 
 export async function loader({params, context}: Route.LoaderArgs) {
@@ -40,7 +41,7 @@ export async function loader({params, context}: Route.LoaderArgs) {
     throw new Response('Could not find the policy', {status: 404});
   }
 
-  const {pathPrefix} = context.storefront.i18n;
+  const pathPrefix = getPathPrefix(context.storefront);
   const seo: SeoConfig = {
     title: policy.title,
     url: `${pathPrefix}/policies/${policy.handle}`,

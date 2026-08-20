@@ -1,11 +1,12 @@
 import {useLoaderData} from 'react-router';
 import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
-import type {Route} from './+types/account.orders.$id';
+import type {Route} from './+types/($locale).account.orders.$id';
 import {getRootSeo} from '~/lib/seo';
 import {orderParamToGid} from '~/lib/orders';
 import {OrderDetailHeader} from '~/components/Account/OrderDetailHeader';
 import {OrderDetailLineItems} from '~/components/Account/OrderDetailLineItems';
 import {OrderDetailSummary} from '~/components/Account/OrderDetailSummary';
+import {getPathPrefix} from '~/lib/i18n';
 
 const ORDER_QUERY = `#graphql-customer-account
   query OrderDetail($orderId: ID!) {
@@ -88,7 +89,7 @@ const ORDER_QUERY = `#graphql-customer-account
 ` as const;
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
-  return getSeoMeta(getRootSeo(matches), data?.seo);
+  return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];
 };
 
 export async function loader({context, params}: Route.LoaderArgs) {
@@ -113,7 +114,7 @@ export async function loader({context, params}: Route.LoaderArgs) {
     throw new Response('Order not found', {status: 404});
   }
 
-  const {pathPrefix} = storefront.i18n;
+  const pathPrefix = getPathPrefix(storefront);
   const seo: SeoConfig = {
     title: `Order ${order.name}`,
     url: `${pathPrefix}/account/orders/${params.id}`,

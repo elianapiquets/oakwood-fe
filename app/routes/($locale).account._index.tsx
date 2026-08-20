@@ -1,5 +1,5 @@
 import {useLoaderData, data} from 'react-router';
-import type {Route} from './+types/account._index';
+import type {Route} from './+types/($locale).account._index';
 import {MyAccount} from '~/components/Account/MyAccount';
 
 const CURRENT_ADDRESS_QUERY = `#graphql-customer-account
@@ -46,7 +46,6 @@ const SET_ACTIVE_COMPANY_MUTATION = `#graphql-customer-account
   }
 ` as const;
 
-
 export async function action({request, context}: Route.ActionArgs) {
   const isLoggedIn = await context.customerAccount.isLoggedIn();
   if (!isLoggedIn) return context.customerAccount.login();
@@ -68,13 +67,15 @@ export async function action({request, context}: Route.ActionArgs) {
         SET_ACTIVE_COMPANY_MUTATION,
         {
           variables: {
-            metafields: [{
-              ownerId: customerId,
-              namespace: 'custom',
-              key: 'active_company_id',
-              value: companyId,
-              type: 'single_line_text_field',
-            }],
+            metafields: [
+              {
+                ownerId: customerId,
+                namespace: 'custom',
+                key: 'active_company_id',
+                value: companyId,
+                type: 'single_line_text_field',
+              },
+            ],
           },
         },
       );
@@ -85,7 +86,9 @@ export async function action({request, context}: Route.ActionArgs) {
   } else if (section === 'user') {
     const addressId = String(form.get('addressId') ?? '');
 
-    const {data: current} = await context.customerAccount.query(CURRENT_ADDRESS_QUERY);
+    const {data: current} = await context.customerAccount.query(
+      CURRENT_ADDRESS_QUERY,
+    );
     const currentAddr = current?.customer?.defaultAddress;
 
     const firstName = get('firstName');
@@ -111,7 +114,8 @@ export async function action({request, context}: Route.ActionArgs) {
               address2: get('address2') ?? currentAddr?.address2 ?? '',
               city: get('city') ?? currentAddr?.city ?? '',
               zoneCode: get('zoneCode') ?? currentAddr?.zoneCode ?? '',
-              territoryCode: get('territoryCode') ?? currentAddr?.territoryCode ?? '',
+              territoryCode:
+                get('territoryCode') ?? currentAddr?.territoryCode ?? '',
               zip: get('zip') ?? currentAddr?.zip ?? '',
               company: currentAddr?.company ?? '',
               phoneNumber: currentAddr?.phoneNumber ?? '',
@@ -136,7 +140,7 @@ export async function loader({context}: Route.LoaderArgs) {
   const isLoggedIn = await context.customerAccount.isLoggedIn();
   if (!isLoggedIn) return context.customerAccount.login();
 
-  const env = context.env as Record<string, string>;
+  const env = context.env as unknown as Record<string, string>;
   const backendUrl = env.BACKEND_URL ?? '';
   const backendApiKey = env.BACKEND_API_KEY ?? '';
 
@@ -189,7 +193,9 @@ export async function loader({context}: Route.LoaderArgs) {
     `),
     fetch(`${backendUrl}/api/companies`, {
       headers: {'x-api-key': backendApiKey},
-    }).then((r) => r.json()).catch(() => []),
+    })
+      .then((r) => r.json())
+      .catch(() => []),
   ]);
 
   const allCompanies = Array.isArray(companiesRes) ? companiesRes : [];

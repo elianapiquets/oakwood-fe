@@ -4,7 +4,7 @@ import type {
   CartLineInput,
 } from '@shopify/hydrogen/storefront-api-types';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
-import type {Route} from './+types/account.select-location';
+import type {Route} from './+types/($locale).account.select-location';
 
 // This route is action-only (submitted via fetcher.Form POST from
 // LocationSelectionDialog). It has no UI of its own, so a stray GET here

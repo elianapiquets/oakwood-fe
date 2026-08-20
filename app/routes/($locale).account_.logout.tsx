@@ -1,4 +1,4 @@
-import type {Route} from './+types/account_.logout';
+import type {Route} from './+types/($locale).account_.logout';
 
 // Hydrogen's `logout()` unsets the `customerAccount` and `buyer` session keys
 // and destroys the session cookie — but it never touches the `cart` cookie,

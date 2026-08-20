@@ -56,11 +56,6 @@ type DivProps = {
   className?: string;
 };
 
-type FormButtonProps = React.ComponentProps<typeof Button> & {
-  hasError?: boolean;
-  errormessage?: string;
-};
-
 type AdditionalProps = Record<string, unknown>;
 
 function processChildren(

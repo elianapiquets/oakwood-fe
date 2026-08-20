@@ -1,11 +1,12 @@
 import {useState} from 'react';
 import {redirect, useLoaderData} from 'react-router';
-import type {Route} from './+types/pages.$handle';
+import type {Route} from './+types/($locale).pages.$handle';
 import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
 import {getRootSeo} from '~/lib/seo';
+import {getPathPrefix} from '~/lib/i18n';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
-  return getSeoMeta(getRootSeo(matches), data?.seo);
+  return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];
 };
 
 export async function loader({context, params}: Route.LoaderArgs) {
@@ -36,7 +37,7 @@ export async function loader({context, params}: Route.LoaderArgs) {
     throw new Response('Not Found', {status: 404});
   }
 
-  const {pathPrefix} = storefront.i18n;
+  const pathPrefix = getPathPrefix(storefront);
   const seo: SeoConfig = {
     title: page.seo?.title ?? page.title,
     ...(page.seo?.description ? {description: page.seo.description} : {}),

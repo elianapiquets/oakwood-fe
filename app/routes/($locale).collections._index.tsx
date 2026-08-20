@@ -1,16 +1,17 @@
 import {useLoaderData, Link} from 'react-router';
-import type {Route} from './+types/collections._index';
+import type {Route} from './+types/($locale).collections._index';
 import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
 import {fetchCollections} from '~/lib/backend';
 import {getRootSeo} from '~/lib/seo';
+import {getPathPrefix} from '~/lib/i18n';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
-  return getSeoMeta(getRootSeo(matches), data?.seo);
+  return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];
 };
 
 export async function loader({context}: Route.LoaderArgs) {
   const collections = await fetchCollections();
-  const {pathPrefix} = context.storefront.i18n;
+  const pathPrefix = getPathPrefix(context.storefront);
 
   const seo: SeoConfig = {
     title: 'Collections',

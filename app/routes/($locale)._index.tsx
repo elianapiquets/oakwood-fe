@@ -1,13 +1,14 @@
-import type {Route} from './+types/_index';
+import type {Route} from './+types/($locale)._index';
 import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
 import {fetchCollections, fetchProducts} from '~/lib/backend';
 import {getRootSeo} from '~/lib/seo';
 import {HomeHero} from '~/components/home/HomeHero';
 import {HomeInfoBar} from '~/components/home/HomeInfoBar';
 import {HomeFeaturedProduct} from '~/components/home/HomeFeaturedProduct';
+import {getPathPrefix} from '~/lib/i18n';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
-  return getSeoMeta(getRootSeo(matches), data?.seo);
+  return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -20,7 +21,7 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
   // TODO: not yet rendered by the UI below — the homepage is on static UI for
   // now. See app/components/home/.
   const collections = await fetchCollections();
-  const {pathPrefix} = context.storefront.i18n;
+  const pathPrefix = getPathPrefix(context.storefront);
 
   const seo: SeoConfig = {
     title: 'Chemicals for Research & Development',
