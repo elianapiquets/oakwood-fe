@@ -11,8 +11,8 @@ import {BriefcaseIcon, PinIcon} from './icons';
 
 const NAV_ITEMS = [
   {label: 'My Account', to: '/account'},
-  // TODO: no dedicated routes yet — point at /account until they exist.
-  {label: 'Order History', to: '/account'},
+  {label: 'Order History', to: '/account/orders'},
+  // TODO: no dedicated route yet — point at /account until it exists.
   {label: 'Track an Order', to: '/account'},
 ];
 
