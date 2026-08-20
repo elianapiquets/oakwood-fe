@@ -60,7 +60,6 @@ const FormController = <Schema extends RequiredSchema>({
             control={methods.control}
             name={currentChildName as Path<Schema>}
             render={({ field: { name, onBlur, onChange, ...rest } }) => {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const handleOnBlur = (e: any) => {
                 if (typedChild.props.onBlur) {
                   typedChild.props.onBlur(e);

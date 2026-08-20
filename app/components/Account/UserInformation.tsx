@@ -38,7 +38,9 @@ type UserInformationProps = {
   customer?: Customer | null;
 };
 
-const UserFormItem = createHandledFormElement<typeof Form.Item, UserFormValues>(Form.Item);
+const UserFormItem = createHandledFormElement<typeof Form.Item, UserFormValues>(
+  Form.Item,
+);
 
 function SectionButtons({
   isEditing,
@@ -120,7 +122,20 @@ function UserInformation({customer}: UserInformationProps) {
       territoryCode: addr?.territoryCode ?? 'US',
       zip: addr?.zip ?? '',
     });
-  }, [customer]);
+    // Primitive deps on purpose: keying this on the `customer` object would
+    // re-run `reset()` whenever its identity changed, and reset() triggers a
+    // render — the shape of an update loop.
+  }, [
+    methodsUser,
+    customer?.firstName,
+    customer?.lastName,
+    addr?.address1,
+    addr?.address2,
+    addr?.city,
+    addr?.zoneCode,
+    addr?.territoryCode,
+    addr?.zip,
+  ]);
 
   const onSubmitUser: SubmitHandler<UserFormValues> = (values) => {
     const formData = new FormData();
@@ -129,7 +144,7 @@ function UserInformation({customer}: UserInformationProps) {
     for (const [key, val] of Object.entries(values)) {
       formData.append(key, String(val ?? ''));
     }
-    fetcher.submit(formData, {method: 'post'});
+    void fetcher.submit(formData, {method: 'post'});
     setIsEditingUser(false);
   };
 
@@ -155,7 +170,7 @@ function UserInformation({customer}: UserInformationProps) {
               methodsUser.reset();
               setIsEditingUser(false);
             }}
-            onSave={methodsUser.handleSubmit(onSubmitUser)}
+            onSave={() => void methodsUser.handleSubmit(onSubmitUser)()}
           />
         </div>
         {isEditingUser && (
@@ -168,7 +183,9 @@ function UserInformation({customer}: UserInformationProps) {
         <Form
           key="info"
           methods={methodsUser}
-          onSubmit={methodsUser.handleSubmit(onSubmitUser)}
+          onSubmit={(event) =>
+            void methodsUser.handleSubmit(onSubmitUser)(event)
+          }
           className="w-full grid grid-cols-2 gap-x-6 gap-y-4 mt-6"
         >
           <UserFormItem name="firstName">

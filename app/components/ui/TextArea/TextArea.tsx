@@ -6,7 +6,7 @@ import type { FieldValues } from 'react-hook-form';
 import React, { useState } from 'react';
 
 import { Input as InputAntd } from 'antd';
-import clsx from 'clsx';
+import {clsx} from 'clsx';
 
 import {
   TEXTAREA_BASE_CLASSNAMES,

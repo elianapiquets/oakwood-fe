@@ -72,7 +72,7 @@ const useCheckForProperFormUsage = <Schema extends FieldValues>(
       (fieldName) => !uniqueNames.includes(fieldName),
     );
 
-    console.log(`[Form] There are no duplicate 'name' properties on Form's 'children'. Form is being used correctly!
+    console.warn(`[Form] There are no duplicate 'name' properties on Form's 'children'. Form is being used correctly!
 
     The following fields will be automatically registered with 'react-hook-form': [${uniqueNames.join(
       ', ',

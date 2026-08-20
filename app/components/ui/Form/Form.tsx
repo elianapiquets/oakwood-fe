@@ -1,24 +1,17 @@
+import type {FieldValues, UseFormReturn, Path} from 'react-hook-form';
 
+import type {ReactElement, ReactNode} from 'react';
+import React, {Children, createElement, isValidElement, Fragment} from 'react';
 
-import type { FieldValues, UseFormReturn, Path } from 'react-hook-form';
+import {clsx} from 'clsx';
 
-import type { ReactElement, ReactNode } from 'react';
-import React, {
-  Children,
-  createElement,
-  isValidElement,
-  Fragment,
-} from 'react';
-
-import clsx from 'clsx';
-
-import { FormController } from './controller';
-import { ErrorTextForm } from '../ErrorTextForm';
-import { Typography } from '../Typography';
-import { Input } from '../Input';
-import { MaskedInput } from '../MaskedInput';
-import { Select } from '../Select';
-import { TextArea } from '../TextArea';
+import {FormController} from './controller';
+import {ErrorTextForm} from '../ErrorTextForm';
+import {Typography} from '../Typography';
+import {Input} from '../Input';
+import {MaskedInput} from '../MaskedInput';
+import {Select} from '../Select';
+import {TextArea} from '../TextArea';
 
 type FooterProps = {
   children?: ReactNode;
@@ -36,7 +29,6 @@ type ItemProps = {
   className?: string;
   name?: Path<FieldValues>;
   errorMessage?: 'string';
-  onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 };
 
 type LabelProps = {
@@ -54,7 +46,7 @@ type FormProps<TFieldValues extends FieldValues> = {
   className?: string;
   methods: UseFormReturn<TFieldValues>;
   loggingMode?: 'always' | 'only first render' | 'never';
-  onSubmit?: () => void;
+  onSubmit?: (event?: React.FormEvent<HTMLFormElement>) => void;
   as?: React.ElementType;
 };
 
@@ -77,7 +69,7 @@ function processChildren(
 ): ReactNode {
   return Children.map(children, (child) => {
     if (isValidElement(child) && child.type !== Fragment) {
-      const { type, props } = child as ReactElement;
+      const {type, props} = child as ReactElement;
 
       if (typeof props === 'object' && props !== null) {
         return createElement(type, {
@@ -107,7 +99,7 @@ const Footer = ({
   </div>
 );
 
-const Error = ({ className, errormessage }: ErrorProps) => {
+const Error = ({className, errormessage}: ErrorProps) => {
   if (!errormessage) return <></>;
 
   return (
@@ -122,7 +114,6 @@ const Item = ({
   className,
   name,
   errorMessage: errormessage,
-  onKeyDown,
   ...rest
 }: ItemProps) => (
   <div
@@ -130,7 +121,6 @@ const Item = ({
       className,
       !className && 'flex flex-col items-start gap-2 text-sm w-full',
     )}
-    onKeyDown={onKeyDown}
   >
     {children ? (
       processChildren(children, {
@@ -191,17 +181,17 @@ const Form = <TFieldValues extends FieldValues>({
   </Component>
 );
 
-const Column = ({ children, className, ...rest }: DivProps) => (
+const Column = ({children, className, ...rest}: DivProps) => (
   <div {...rest} className={clsx('flex flex-col', className)}>
-    {children ? processChildren(children, { ...rest }) : <></>}
+    {children ? processChildren(children, {...rest}) : <></>}
   </div>
 );
 
 Column.displayName = 'Column';
 
-const Row = ({ children, name, className, ...rest }: DivProps) => (
+const Row = ({children, name, className, ...rest}: DivProps) => (
   <div {...rest} className={clsx('flex flex-row', className)}>
-    {children ? processChildren(children, { name, ...rest }) : <></>}
+    {children ? processChildren(children, {name, ...rest}) : <></>}
   </div>
 );
 
@@ -227,5 +217,5 @@ Form.Column = Column;
 
 Form.Row = Row;
 
-export { Form };
-export type { FormProps };
+export {Form};
+export type {FormProps};

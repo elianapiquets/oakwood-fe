@@ -1,13 +1,11 @@
+import type {InputBaseProps} from '../InputWrapper';
+import type {InputProps as AntdInputProps} from 'antd';
+import type {FieldValues} from 'react-hook-form';
 
+import React, {useEffect, useState} from 'react';
 
-import type { InputBaseProps } from '../InputWrapper';
-import type { InputProps as AntdInputProps } from 'antd';
-import type { FieldValues } from 'react-hook-form';
-
-import React, { useEffect, useState } from 'react';
-
-import { Input as InputAntd } from 'antd';
-import clsx from 'clsx';
+import {Input as InputAntd} from 'antd';
+import {clsx} from 'clsx';
 
 import {
   InputWrapper,
@@ -20,7 +18,7 @@ import {
   INPUT_ANTD_SUFFIX_CLASSNAMES,
   INPUT_ANTD_PREFIX_CLASSNAMES,
 } from '../InputWrapper';
-import { Eye, EyeOff } from 'lucide-react';
+import {Eye, EyeOff} from 'lucide-react';
 
 type InputProps<TFieldValues extends FieldValues> = AntdInputProps &
   InputBaseProps<TFieldValues>;
@@ -50,6 +48,7 @@ const Input = <TFieldValues extends FieldValues>(
     readOnly,
     onKeyUp,
     onMouseOver,
+    'aria-label': ariaLabel,
     classNames,
   } = props;
 
@@ -86,7 +85,7 @@ const Input = <TFieldValues extends FieldValues>(
   };
 
   if (!onChange) {
-    console.log('onChange is required');
+    console.warn('onChange is required');
   }
 
   const error = hasError || errormessage;
@@ -113,8 +112,13 @@ const Input = <TFieldValues extends FieldValues>(
           readOnly={readOnly}
           onKeyUp={onKeyUp}
           onMouseOver={onMouseOver}
+          // Keyboard parity with onMouseOver, matching the other branches.
+          onFocus={handleFocus}
         />
         <span className={'input-checkbox-checkmark'}></span>
+        {/* The checkbox's visible text lives with the consumer, so surface any
+            supplied accessible name here — the label itself needs text. */}
+        {ariaLabel ? <span className="sr-only">{ariaLabel}</span> : null}
       </label>
     );
   }
@@ -207,5 +211,5 @@ const Input = <TFieldValues extends FieldValues>(
   );
 };
 
-export { Input };
-export type { InputProps };
+export {Input};
+export type {InputProps};

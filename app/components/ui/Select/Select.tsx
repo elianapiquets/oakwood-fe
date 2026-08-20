@@ -65,7 +65,7 @@ const Select = <TFieldValues extends FieldValues>(
   };
 
   if (!name || !onChange) {
-    console.log('name and onChange are required');
+    console.warn('name and onChange are required');
 
     return null;
   }

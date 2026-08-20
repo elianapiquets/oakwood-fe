@@ -1,6 +1,6 @@
 import type { InputWrapperProps } from './types';
 
-import clsx from 'clsx';
+import {clsx} from 'clsx';
 
 import { Lock } from 'lucide-react';
 

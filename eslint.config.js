@@ -30,6 +30,9 @@ export default [
       '**/*.graphql.d.ts',
       '**/*.graphql.ts',
       '**/*.generated.d.ts',
+      // Figma-generated, marked do-not-edit-manually, so its blanket
+      // eslint-disable can't be fixed in-file.
+      'app/components/ui/icons/svg-imports.ts',
       '**/.react-router/',
       '**/packages/hydrogen/dist/',
     ],

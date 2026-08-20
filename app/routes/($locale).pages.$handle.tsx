@@ -26,10 +26,11 @@ export async function loader({context, params}: Route.LoaderArgs) {
       })
       .catch(() => null);
     const target = (redirectData as any)?.urlRedirects?.nodes?.[0]?.target as
-      | string
-      | undefined;
+      string | undefined;
     if (target) {
-      const path = target.startsWith('http') ? new URL(target).pathname : target;
+      const path = target.startsWith('http')
+        ? new URL(target).pathname
+        : target;
       throw redirect(path, 301);
     }
     throw new Response('Not Found', {status: 404});
@@ -69,7 +70,10 @@ function parseQA(html: string) {
   for (const part of parts) {
     const closeIdx = part.search(/<\/h2>/i);
     if (closeIdx === -1) continue;
-    const question = part.slice(0, closeIdx).replace(/<[^>]+>/g, '').trim();
+    const question = part
+      .slice(0, closeIdx)
+      .replace(/<[^>]+>/g, '')
+      .trim();
     const answer = part.slice(closeIdx + 5).trim();
     if (question) items.push({question, answer});
   }
@@ -85,7 +89,7 @@ function FaqPage({page}: {page: {title: string; body: string}}) {
       <h1 className="text-2xl font-bold text-navy mb-8">{page.title}</h1>
       <div className="border-t border-gray-200">
         {items.map((item, i) => (
-          <div key={i} className="border-b border-gray-200">
+          <div key={item.question} className="border-b border-gray-200">
             <button
               type="button"
               className="w-full text-left py-4 flex items-center justify-between gap-4 font-medium text-navy hover:text-teal cursor-pointer bg-transparent"
@@ -93,7 +97,9 @@ function FaqPage({page}: {page: {title: string; body: string}}) {
               onClick={() => setOpen(open === i ? null : i)}
             >
               <span>{item.question}</span>
-              <span className="text-xl flex-shrink-0 text-teal">{open === i ? '−' : '+'}</span>
+              <span className="text-xl flex-shrink-0 text-teal">
+                {open === i ? '−' : '+'}
+              </span>
             </button>
             {open === i && (
               <div

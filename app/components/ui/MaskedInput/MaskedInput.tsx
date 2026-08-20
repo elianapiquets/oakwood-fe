@@ -6,7 +6,7 @@ import type { FieldValues } from 'react-hook-form';
 import React, { useState } from 'react';
 
 import { MaskedInput as MaskedInputAntd } from 'antd-mask-input';
-import clsx from 'clsx';
+import {clsx} from 'clsx';
 
 import { transformToUnmaskedValue } from './utils';
 import {
@@ -51,7 +51,7 @@ const MaskedInput = <TFieldValues extends FieldValues>(
   const [isFocused, setIsFocused] = useState(false);
 
   if (!name || !onChange) {
-    console.log('name and onChange are required');
+    console.warn('name and onChange are required');
 
     return null;
   }
