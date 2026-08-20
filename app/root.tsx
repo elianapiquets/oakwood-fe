@@ -14,6 +14,7 @@ import {
 import type {Route} from './+types/root';
 import favicon from '~/assets/favicon.svg';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+import {CUSTOMER_LOCATIONS_QUERY} from '~/graphql/customer-account/CustomerLocationsQuery';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
@@ -144,6 +145,8 @@ export interface CustomerCompanyLocation {
   id: string;
   name: string;
   role: string | null;
+  /** `shippingAddress.formattedAddress`, rendered under the name in the selector. */
+  address: string[];
 }
 
 export interface CustomerData {
@@ -154,34 +157,6 @@ export interface CustomerData {
   selectedLocation: CustomerCompanyLocation | null;
   needsLocationSelection: boolean;
 }
-
-const CUSTOMER_QUERY = `#graphql-customer-account
-  query CustomerHeaderInfo {
-    customer {
-      firstName
-      lastName
-      emailAddress { emailAddress }
-      companyContacts(first: 1) {
-        nodes {
-          id
-          company { id name }
-          locations(first: 10) {
-            nodes {
-              id
-              name
-              roleAssignments(first: 10) {
-                nodes {
-                  role { name }
-                  contact { id }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-` as const;
 
 function loadDeferredData({context}: Route.LoaderArgs) {
   const {storefront, customerAccount, cart} = context;
@@ -202,7 +177,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
     .isLoggedIn()
     .then(async (isLoggedIn) => {
       if (!isLoggedIn) return null;
-      const {data} = await customerAccount.query(CUSTOMER_QUERY);
+      const {data} = await customerAccount.query(CUSTOMER_LOCATIONS_QUERY);
       const {firstName, lastName, emailAddress} = data?.customer ?? {};
       const name = [firstName, lastName].filter(Boolean).join(' ') || null;
       const email = emailAddress?.emailAddress ?? null;
@@ -218,6 +193,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
               loc.roleAssignments.nodes.find(
                 (ra: any) => ra.contact.id === contact.id,
               )?.role.name ?? null,
+            address: loc.shippingAddress?.formattedAddress ?? [],
           }))
         : [];
 

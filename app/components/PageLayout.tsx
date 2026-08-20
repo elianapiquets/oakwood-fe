@@ -10,8 +10,8 @@ import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
 import {Header, HeaderMenu} from '~/components/Header';
 import {CartMain} from '~/components/CartMain';
-import {LocationSelectionDialog} from '~/components/Account/LocationSelectionDialog';
-import {LocationSelectionProvider} from '~/components/Account/LocationSelectionContext';
+import {B2BLocationProvider} from '~/components/B2BLocationProvider';
+import {B2BLocationSelector} from '~/components/B2BLocationSelector';
 import {
   SEARCH_ENDPOINT,
   SearchFormPredictive,
@@ -36,12 +36,15 @@ export function PageLayout({
   customer,
 }: PageLayoutProps) {
   return (
-    <LocationSelectionProvider>
+    <B2BLocationBoundary customer={customer}>
       <Aside.Provider>
         <CartAside cart={cart} />
         <SearchAside />
-        <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
-        <LocationSelectionDialog customer={customer} />
+        <MobileMenuAside
+          header={header}
+          publicStoreDomain={publicStoreDomain}
+        />
+        <B2BLocationSelector />
         {header && (
           <Header
             header={header}
@@ -57,7 +60,48 @@ export function PageLayout({
           publicStoreDomain={publicStoreDomain}
         />
       </Aside.Provider>
-    </LocationSelectionProvider>
+    </B2BLocationBoundary>
+  );
+}
+
+/**
+ * Root's `customer` is deferred, so the provider is fed from inside a Suspense
+ * boundary. Before it resolves the provider still renders with empty values, so
+ * nothing below it has to special-case a missing context.
+ */
+function B2BLocationBoundary({
+  customer,
+  children,
+}: {
+  customer: PageLayoutProps['customer'];
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <B2BLocationProvider
+          company={null}
+          companyLocationId={null}
+          locations={[]}
+          needsLocationSelection={false}
+        >
+          {children}
+        </B2BLocationProvider>
+      }
+    >
+      <Await resolve={customer} errorElement={<>{children}</>}>
+        {(resolved) => (
+          <B2BLocationProvider
+            company={resolved?.company ?? null}
+            companyLocationId={resolved?.selectedLocation?.id ?? null}
+            locations={resolved?.locations ?? []}
+            needsLocationSelection={Boolean(resolved?.needsLocationSelection)}
+          >
+            {children}
+          </B2BLocationProvider>
+        )}
+      </Await>
+    </Suspense>
   );
 }
 

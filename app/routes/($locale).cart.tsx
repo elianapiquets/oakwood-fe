@@ -1,6 +1,8 @@
 import {useLoaderData, data, type HeadersFunction} from 'react-router';
 import type {Route} from './+types/($locale).cart';
 import type {CartQueryDataReturn, SeoConfig} from '@shopify/hydrogen';
+import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
+import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {CartForm, getSeoMeta} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
 import {getRootSeo} from '~/lib/seo';
@@ -12,8 +14,27 @@ export const meta: Route.MetaFunction = ({data, matches}) => {
 
 export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
 
+// Only the customer's own locations may be selected. Shopify's B2B cookbook
+// submits a client-supplied `companyLocationId` straight into the mutation; this
+// re-reads the customer's real locations and rejects anything else.
+const CUSTOMER_LOCATION_IDS_QUERY = `#graphql-customer-account
+  query CartCustomerLocationIds {
+    customer {
+      companyContacts(first: 1) {
+        nodes {
+          locations(first: 20) {
+            nodes {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+` as const;
+
 export async function action({request, context}: Route.ActionArgs) {
-  const {cart} = context;
+  const {cart, customerAccount} = context;
 
   const formData = await request.formData();
 
@@ -25,6 +46,10 @@ export async function action({request, context}: Route.ActionArgs) {
 
   let status = 200;
   let result: CartQueryDataReturn;
+  /** Lines dropped by a buyer-identity change, surfaced to the cart UI. */
+  let removedLineCount = 0;
+  /** Which path actually applied the company location. */
+  let strategy: 'updated' | 'recreated' = 'updated';
 
   switch (action) {
     case CartForm.ACTIONS.LinesAdd:
@@ -66,9 +91,154 @@ export async function action({request, context}: Route.ActionArgs) {
       break;
     }
     case CartForm.ACTIONS.BuyerIdentityUpdate: {
-      result = await cart.updateBuyerIdentity({
-        ...inputs.buyerIdentity,
-      });
+      const buyerIdentity = (inputs.buyerIdentity ?? {}) as {
+        companyLocationId?: string | null;
+      };
+      const requestedLocationId = buyerIdentity.companyLocationId ?? null;
+
+      if (requestedLocationId) {
+        if (!(await customerAccount.isLoggedIn())) {
+          return data({error: 'Not logged in'}, {status: 401});
+        }
+
+        const {data: customerData} = await customerAccount.query(
+          CUSTOMER_LOCATION_IDS_QUERY,
+        );
+        const ownLocationIds = new Set(
+          (
+            customerData?.customer?.companyContacts?.nodes?.[0]?.locations
+              ?.nodes ?? []
+          ).map((location: any) => location.id),
+        );
+
+        if (!ownLocationIds.has(requestedLocationId)) {
+          return data({error: 'Invalid location'}, {status: 403});
+        }
+      }
+
+      // Shopify documents this mutation as able to invalidate a cart:
+      // "Products not published for the current B2B customer will be removed
+      // from cart". Count the lines first so the removal can be reported
+      // instead of the customer silently losing items.
+      const linesBefore = requestedLocationId
+        ? ((await cart.get())?.lines?.nodes?.length ?? 0)
+        : 0;
+
+      result = await cart.updateBuyerIdentity({...inputs.buyerIdentity});
+
+      if (
+        requestedLocationId &&
+        (result?.errors?.length || result?.userErrors?.length)
+      ) {
+        return data(
+          {
+            error: 'Failed to switch location',
+            errors: result.errors,
+            userErrors: result.userErrors,
+          },
+          {status: 500},
+        );
+      }
+
+      if (requestedLocationId) {
+        // Read the cart back rather than trusting the mutation's own payload:
+        // the response can lag the change even when it did apply.
+        const confirmed = (await cart.get()) as CartApiQueryFragment | null;
+        const linesAfter = confirmed?.lines?.nodes?.length ?? 0;
+        removedLineCount = Math.max(0, linesBefore - linesAfter);
+
+        const appliedLocationId =
+          confirmed?.buyerIdentity?.purchasingCompany?.location?.id ?? null;
+
+        // Measured on this store: `cartBuyerIdentityUpdate` returns no errors
+        // and still leaves `purchasingCompany` unset on a cart that has lines —
+        // exactly the invalid-cart case Shopify documents. An empty cart needs
+        // no fallback: the session buyer is already set, so the next
+        // `addLines()` creates the cart at the right location.
+        if (appliedLocationId !== requestedLocationId && linesAfter > 0) {
+          const lines: CartLineInput[] = (confirmed?.lines?.nodes ?? [])
+            // Bundle components arrive as top-level lines beside their parent
+            // (the filter CartMain applies when rendering); Shopify re-derives
+            // them, so re-adding would double up.
+            .filter(
+              (line) =>
+                !(
+                  'parentRelationship' in line &&
+                  line.parentRelationship?.parent
+                ),
+            )
+            .map((line) => ({
+              merchandiseId: line.merchandise.id,
+              quantity: line.quantity,
+              attributes: line.attributes.flatMap(({key, value}) =>
+                value == null ? [] : [{key, value}],
+              ),
+            }));
+
+          const discountCodes = (confirmed?.discountCodes ?? [])
+            .filter((discount) => discount.applicable)
+            .map(({code}) => code);
+
+          // Gift cards can't be carried over — the Storefront API exposes only
+          // their last four characters, never the code.
+          const recreated = await cart.create({
+            lines,
+            discountCodes,
+            buyerIdentity: {companyLocationId: requestedLocationId},
+            ...(confirmed?.note ? {note: confirmed.note} : {}),
+            ...(confirmed?.attributes?.length
+              ? {
+                  attributes: confirmed.attributes.flatMap(({key, value}) =>
+                    value == null ? [] : [{key, value}],
+                  ),
+                }
+              : {}),
+          });
+
+          if (
+            recreated.errors?.length ||
+            recreated.userErrors?.length ||
+            !recreated.cart?.id
+          ) {
+            return data(
+              {
+                error: 'Failed to switch location',
+                errors: recreated.errors,
+                userErrors: recreated.userErrors,
+              },
+              {status: 500},
+            );
+          }
+
+          removedLineCount = Math.max(
+            0,
+            linesBefore - (recreated.cart.lines?.nodes?.length ?? 0),
+          );
+          result = recreated;
+          strategy = 'recreated';
+        }
+
+        // TEMPORARY diagnostic — remove once switching is confirmed working.
+        console.warn(
+          '[cart] location switch ' +
+            JSON.stringify(
+              {
+                requestedLocationId,
+                appliedLocationId,
+                sessionBuyerAfter:
+                  (await customerAccount.getBuyer())?.companyLocationId ?? null,
+                linesBefore,
+                linesAfter,
+                removedLineCount,
+                strategy,
+                cartIdAfter: result?.cart?.id ?? null,
+              },
+              null,
+              2,
+            ),
+        );
+      }
+
       break;
     }
     default:
@@ -90,6 +260,8 @@ export async function action({request, context}: Route.ActionArgs) {
       cart: cartResult,
       errors,
       warnings,
+      removedLineCount,
+      strategy,
       analytics: {
         cartId,
       },

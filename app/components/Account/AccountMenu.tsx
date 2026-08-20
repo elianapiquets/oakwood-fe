@@ -6,7 +6,7 @@ import {
   PopoverContent,
 } from '~/components/ui/Popover/Popover';
 import type {CustomerCompanyLocation} from '~/root';
-import {useLocationSelection} from './LocationSelectionContext';
+import {useB2BLocation} from '~/components/B2BLocationProvider';
 import {BriefcaseIcon, PinIcon} from './icons';
 
 const NAV_ITEMS = [
@@ -31,7 +31,7 @@ export function AccountMenu({
   selectedLocation: CustomerCompanyLocation | null;
 }) {
   const [open, setOpen] = useState(false);
-  const {open: openLocationSwitcher} = useLocationSelection();
+  const {setModalOpen} = useB2BLocation();
   const initial = name.charAt(0).toUpperCase();
   const navItems = company ? [...NAV_ITEMS, COMPANY_NAV_ITEM] : NAV_ITEMS;
 
@@ -55,31 +55,39 @@ export function AccountMenu({
               <BriefcaseIcon />
               {company.name}
             </div>
-            {selectedLocation && (
-              <div className="mt-2 flex items-center justify-between gap-2 text-sm text-slate-700">
+            {/* Switch is NOT nested under `selectedLocation`: a contact with
+                several locations and none chosen yet still needs a way to open
+                the selector. */}
+            <div className="mt-2 flex items-center justify-between gap-2 text-sm text-slate-700">
+              {selectedLocation ? (
                 <span className="flex items-center gap-2">
                   <PinIcon />
                   {selectedLocation.name}
-                  {selectedLocation.role && (
+                  {selectedLocation.role ? (
                     <span className="rounded bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
                       {selectedLocation.role}
                     </span>
-                  )}
+                  ) : null}
                 </span>
-                {locations.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOpen(false);
-                      openLocationSwitcher();
-                    }}
-                    className="text-xs font-medium text-teal hover:underline"
-                  >
-                    Switch
-                  </button>
-                )}
-              </div>
-            )}
+              ) : (
+                <span className="flex items-center gap-2 text-slate-500">
+                  <PinIcon />
+                  No location selected
+                </span>
+              )}
+              {locations.length > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    setModalOpen(true);
+                  }}
+                  className="text-xs font-medium text-teal hover:underline"
+                >
+                  Switch
+                </button>
+              ) : null}
+            </div>
           </div>
         )}
 

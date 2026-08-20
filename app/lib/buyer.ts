@@ -23,8 +23,8 @@ export interface BuyerContext {
 
 /**
  * Reads the B2B buyer out of Hydrogen's own `buyer` session slot — the same
- * slot `setBuyer()` writes in `/account/select-location` and that the cart
- * handler merges into every cart mutation — and pairs it with the caching
+ * slot Hydrogen's cart handler writes whenever a mutation's `buyerIdentity`
+ * carries a `companyLocationId`, and that it merges into every cart mutation — and pairs it with the caching
  * strategy that buyer-scoped data requires.
  *
  * `getBuyer()` resolves to `undefined` (not an empty object) when nobody is
