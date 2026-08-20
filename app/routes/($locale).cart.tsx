@@ -7,6 +7,7 @@ import {CartForm, getSeoMeta} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
 import {getRootSeo} from '~/lib/seo';
 import {getPathPrefix} from '~/lib/i18n';
+import {CUSTOMER_LOCATION_IDS_QUERY} from '~/graphql/customer-account/CartCustomerLocationIdsQuery';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
   return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];
@@ -17,21 +18,6 @@ export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
 // Only the customer's own locations may be selected. Shopify's B2B cookbook
 // submits a client-supplied `companyLocationId` straight into the mutation; this
 // re-reads the customer's real locations and rejects anything else.
-const CUSTOMER_LOCATION_IDS_QUERY = `#graphql-customer-account
-  query CartCustomerLocationIds {
-    customer {
-      companyContacts(first: 1) {
-        nodes {
-          locations(first: 20) {
-            nodes {
-              id
-            }
-          }
-        }
-      }
-    }
-  }
-` as const;
 
 export async function action({request, context}: Route.ActionArgs) {
   const {cart, customerAccount} = context;
@@ -217,26 +203,6 @@ export async function action({request, context}: Route.ActionArgs) {
           result = recreated;
           strategy = 'recreated';
         }
-
-        // TEMPORARY diagnostic — remove once switching is confirmed working.
-        console.warn(
-          '[cart] location switch ' +
-            JSON.stringify(
-              {
-                requestedLocationId,
-                appliedLocationId,
-                sessionBuyerAfter:
-                  (await customerAccount.getBuyer())?.companyLocationId ?? null,
-                linesBefore,
-                linesAfter,
-                removedLineCount,
-                strategy,
-                cartIdAfter: result?.cart?.id ?? null,
-              },
-              null,
-              2,
-            ),
-        );
       }
 
       break;

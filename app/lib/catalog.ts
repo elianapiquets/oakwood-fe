@@ -2,7 +2,7 @@ import type {CustomerAccount, Storefront} from '@shopify/hydrogen';
 import {
   CATALOG_COLLECTIONS_QUERY,
   CATALOG_COLLECTION_QUERY,
-} from '~/graphql/catalog';
+} from '~/graphql/storefront/CatalogQueries';
 import {getBuyerContext} from '~/lib/buyer';
 import type {CatalogSidebarCollection} from '~/components/catalog/CatalogSidebar';
 import type {CatalogTableProduct} from '~/components/catalog/CatalogTable';
@@ -68,7 +68,10 @@ export async function loadCatalogData(
   return {
     collections: collections.nodes,
     collection: collectionDetail
-      ? {title: collectionDetail.title, description: collectionDetail.description}
+      ? {
+          title: collectionDetail.title,
+          description: collectionDetail.description,
+        }
       : null,
     products,
   };

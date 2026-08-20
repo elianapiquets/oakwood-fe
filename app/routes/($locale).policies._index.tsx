@@ -8,6 +8,7 @@ export const meta: Route.MetaFunction = ({data, matches}) => {
 };
 import type {PoliciesQuery, PolicyItemFragment} from 'storefrontapi.generated';
 import {getPathPrefix} from '~/lib/i18n';
+import {POLICIES_QUERY} from '~/graphql/storefront/PoliciesQuery';
 
 export async function loader({context}: Route.LoaderArgs) {
   const data: PoliciesQuery = await context.storefront.query(POLICIES_QUERY);
@@ -50,21 +51,3 @@ export default function Policies() {
     </div>
   );
 }
-
-const POLICIES_QUERY = `#graphql
-  fragment PolicyItem on ShopPolicy {
-    id
-    title
-    handle
-  }
-  query Policies($country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
-    shop {
-      privacyPolicy { ...PolicyItem }
-      shippingPolicy { ...PolicyItem }
-      termsOfService { ...PolicyItem }
-      refundPolicy { ...PolicyItem }
-      subscriptionPolicy { id title handle }
-    }
-  }
-` as const;

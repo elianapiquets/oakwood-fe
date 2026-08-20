@@ -16,208 +16,30 @@ import {
 import {roleCanViewAllLocationOrders} from '~/lib/b2bRoles';
 import {OrdersSection} from '~/components/Account/OrdersSection';
 import {getPathPrefix} from '~/lib/i18n';
+import {
+  ORDER_ITEM_FRAGMENT,
+  COMPANY_LOCATIONS_QUERY,
+  COMPANY_ORDERS_QUERY,
+  CONTACT_ORDERS_QUERY,
+  CUSTOMER_ORDERS_QUERY,
+} from '~/graphql/customer-account/CustomerOrdersQueries';
 
 // Every column the orders table renders. Spread into both connections below so
 // the two scopes can share one row component.
-const ORDER_ITEM_FRAGMENT = `#graphql-customer-account
-  fragment OrderItem on Order {
-    id
-    name
-    processedAt
-    financialStatus
-    fulfillmentStatus
-    statusPageUrl
-    totalPrice {
-      amount
-      currencyCode
-    }
-    customer {
-      firstName
-      lastName
-    }
-    purchasingEntity {
-      __typename
-      ... on PurchasingCompany {
-        company {
-          name
-        }
-        location {
-          name
-        }
-      }
-    }
-    lineItems(first: 50) {
-      nodes {
-        quantity
-      }
-      pageInfo {
-        hasNextPage
-      }
-    }
-    shippingLine {
-      title
-    }
-    fulfillments(first: 1) {
-      nodes {
-        latestShipmentStatus
-      }
-    }
-  }
-` as const;
 
 // Cheap scope probe: is this a company customer, and which locations may they
 // order for? Kept separate from the orders queries so resolving the active tab
 // never costs a second full orders fetch.
-const COMPANY_LOCATIONS_QUERY = `#graphql-customer-account
-  query CompanyOrderLocations {
-    customer {
-      companyContacts(first: 1) {
-        nodes {
-          id
-          company {
-            id
-            name
-          }
-          locations(first: 20) {
-            nodes {
-              id
-              name
-              roleAssignments(first: 20) {
-                nodes {
-                  contact {
-                    id
-                  }
-                  role {
-                    name
-                    resourcePermission(resource: ORDER)
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-` as const;
 
 // B2B: every order under the company, across all locations and contacts.
 // Shopify scopes this to what the contact's role actually permits.
-const COMPANY_ORDERS_QUERY = `#graphql-customer-account
-  query CompanyOrders(
-    $first: Int
-    $last: Int
-    $startCursor: String
-    $endCursor: String
-    $query: String
-  ) {
-    customer {
-      companyContacts(first: 1) {
-        nodes {
-          company {
-            id
-            name
-            orders(
-              first: $first
-              last: $last
-              before: $startCursor
-              after: $endCursor
-              query: $query
-              sortKey: PROCESSED_AT
-              reverse: true
-            ) {
-              nodes {
-                ...OrderItem
-              }
-              pageInfo {
-                hasPreviousPage
-                hasNextPage
-                startCursor
-                endCursor
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  ${ORDER_ITEM_FRAGMENT}
-` as const;
 
 // Own-orders scope for a role without ORDER view permission at its location.
 // Uses the contact's own connection rather than a
 // `purchasing_company_contact_id` filter — that filter is well-formed but
 // matches nothing, so it silently returned an empty list.
-const CONTACT_ORDERS_QUERY = `#graphql-customer-account
-  query ContactOrders(
-    $first: Int
-    $last: Int
-    $startCursor: String
-    $endCursor: String
-    $query: String
-  ) {
-    customer {
-      companyContacts(first: 1) {
-        nodes {
-          orders(
-            first: $first
-            last: $last
-            before: $startCursor
-            after: $endCursor
-            query: $query
-            sortKey: PROCESSED_AT
-            reverse: true
-          ) {
-            nodes {
-              ...OrderItem
-            }
-            pageInfo {
-              hasPreviousPage
-              hasNextPage
-              startCursor
-              endCursor
-            }
-          }
-        }
-      }
-    }
-  }
-  ${ORDER_ITEM_FRAGMENT}
-` as const;
 
 // Non-B2B fallback: just this customer's own orders.
-const CUSTOMER_ORDERS_QUERY = `#graphql-customer-account
-  query CustomerOrders(
-    $first: Int
-    $last: Int
-    $startCursor: String
-    $endCursor: String
-    $query: String
-  ) {
-    customer {
-      orders(
-        first: $first
-        last: $last
-        before: $startCursor
-        after: $endCursor
-        query: $query
-        sortKey: PROCESSED_AT
-        reverse: true
-      ) {
-        nodes {
-          ...OrderItem
-        }
-        pageInfo {
-          hasPreviousPage
-          hasNextPage
-          startCursor
-          endCursor
-        }
-      }
-    }
-  }
-  ${ORDER_ITEM_FRAGMENT}
-` as const;
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
   return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];

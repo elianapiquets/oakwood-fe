@@ -4,6 +4,8 @@ import type {Route} from './+types/($locale).pages.$handle';
 import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
 import {getRootSeo} from '~/lib/seo';
 import {getPathPrefix} from '~/lib/i18n';
+import {PAGE_QUERY} from '~/graphql/storefront/PageQuery';
+import {URL_REDIRECTS_QUERY} from '~/graphql/storefront/RedirectQuery';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
   return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];
@@ -114,33 +116,3 @@ function FaqPage({page}: {page: {title: string; body: string}}) {
     </div>
   );
 }
-
-const PAGE_QUERY = `#graphql
-  query Page(
-    $language: LanguageCode
-    $country: CountryCode
-    $handle: String!
-  ) @inContext(country: $country, language: $language) {
-    page(handle: $handle) {
-      id
-      title
-      handle
-      body
-      seo {
-        description
-        title
-      }
-    }
-  }
-` as const;
-
-const URL_REDIRECTS_QUERY = `#graphql
-  query UrlRedirects($query: String!) {
-    urlRedirects(first: 1, query: $query) {
-      nodes {
-        path
-        target
-      }
-    }
-  }
-` as const;

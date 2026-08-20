@@ -10,46 +10,13 @@ import {
   CompanyCard,
   InitialsBadge,
 } from '~/components/Account/company/CompanyCard';
+import {COMPANY_QUERY} from '~/graphql/customer-account/CompanyOverviewQuery';
 
 /**
  * Fields verified against the live 2026-04 schema. `contacts` is fetched only
  * to count the people at each location for the summary line — `OrderConnection`
  * and friends expose no `totalCount`, so a count means fetching ids.
  */
-const COMPANY_QUERY = `#graphql-customer-account
-  query CompanyOverview {
-    customer {
-      companyContacts(first: 1) {
-        nodes {
-          id
-          company {
-            id
-            name
-            externalId
-          }
-          locations(first: 20) {
-            nodes {
-              id
-              name
-              shippingAddress {
-                city
-                zoneCode
-              }
-              buyerExperienceConfiguration {
-                payNowOnly
-              }
-              contacts(first: 50) {
-                nodes {
-                  id
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-` as const;
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
   return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];

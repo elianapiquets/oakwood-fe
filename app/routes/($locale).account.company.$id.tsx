@@ -12,6 +12,7 @@ import {
   FieldLabel,
   InitialsBadge,
 } from '~/components/Account/company/CompanyCard';
+import {LOCATION_QUERY} from '~/graphql/customer-account/CompanyLocationQuery';
 
 /**
  * Verified against the live 2026-04 schema — the bundled
@@ -27,72 +28,6 @@ import {
  * The company name and the authorization check come from `customer` in the
  * same document, so the page costs one request rather than two.
  */
-const LOCATION_QUERY = `#graphql-customer-account
-  query CompanyLocationDetail($locationId: ID!) {
-    customer {
-      companyContacts(first: 1) {
-        nodes {
-          company {
-            id
-            name
-          }
-          locations(first: 50) {
-            nodes {
-              id
-            }
-          }
-        }
-      }
-    }
-    companyLocation(id: $locationId) {
-      id
-      name
-      taxIdentifier
-      shippingAddress {
-        formattedAddress
-      }
-      billingAddress {
-        formattedAddress
-      }
-      buyerExperienceConfiguration {
-        payNowOnly
-      }
-      orders(first: 1, sortKey: PROCESSED_AT, reverse: true) {
-        nodes {
-          id
-          paymentInformation {
-            paymentTerms {
-              paymentTermsName
-            }
-          }
-        }
-      }
-      contacts(first: 50) {
-        nodes {
-          id
-          title
-          customer {
-            firstName
-            lastName
-            emailAddress {
-              emailAddress
-            }
-          }
-        }
-      }
-      roleAssignments(first: 50) {
-        nodes {
-          contact {
-            id
-          }
-          role {
-            name
-          }
-        }
-      }
-    }
-  }
-` as const;
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
   return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];
