@@ -12,6 +12,9 @@ interface OrdersSectionProps {
   activeLocationId: string | null;
   searchTerm: string;
   shipmentStatus: string;
+  /** True when the contact's role at this location only permits its own orders. */
+  scopedToOwnOrders: boolean;
+  roleName: string | null;
 }
 
 /**
@@ -35,6 +38,8 @@ export function OrdersSection({
   activeLocationId,
   searchTerm,
   shipmentStatus,
+  scopedToOwnOrders,
+  roleName,
 }: OrdersSectionProps) {
   const hasOrders = Boolean(orders?.nodes?.length);
   const isFiltered = Boolean(searchTerm || shipmentStatus);
@@ -53,6 +58,13 @@ export function OrdersSection({
           shipmentStatus={shipmentStatus}
           activeLocationId={activeLocationId}
         />
+      )}
+      {scopedToOwnOrders && (
+        <p className="text-xs text-slate-500">
+          Showing only orders you placed at this location
+          {roleName ? ` — your role here is ${roleName}` : ''}. A location admin
+          can see every order for the location.
+        </p>
       )}
     </>
   );

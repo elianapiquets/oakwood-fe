@@ -30,7 +30,12 @@ export function Header({
     <div className="sticky top-0 z-50 bg-white shadow-sm">
       {/* Main header row */}
       <div className="flex items-center px-6 py-3 bg-white gap-4">
-        <NavLink prefetch="intent" to="/" className="flex items-center gap-2.5 no-underline flex-shrink-0" end>
+        <NavLink
+          prefetch="intent"
+          to="/"
+          className="flex items-center gap-2.5 no-underline flex-shrink-0"
+          end
+        >
           <div className="w-11 h-11 bg-navy text-white flex items-center justify-center font-extrabold text-base rounded flex-shrink-0">
             OC
           </div>
@@ -88,12 +93,6 @@ export function Header({
             className="text-gray-700 text-xs px-3 py-1.5 border border-gray-300 rounded bg-white hover:bg-gray-50 whitespace-nowrap no-underline"
           >
             Structure Search
-          </NavLink>
-          <NavLink
-            to="/account"
-            className="text-gray-700 text-xs px-3 py-1.5 border border-gray-300 rounded bg-white hover:bg-gray-50 whitespace-nowrap no-underline"
-          >
-            Track Your Order
           </NavLink>
           <a
             href="tel:18004673386"
@@ -231,10 +230,7 @@ export function HeaderMenu({
           return (
             <div key={item.id} className="relative group flex items-center">
               {noLink ? (
-                <button
-                  type="button"
-                  className={navLinkClass(false)}
-                >
+                <button type="button" className={navLinkClass(false)}>
                   {item.title}
                   <span className="text-[0.6rem] opacity-75">▾</span>
                 </button>
@@ -397,15 +393,15 @@ function CartBadge({count}: {count: number}) {
   );
 }
 
-function UserAvatar({
-  customer,
-}: {
-  customer: HeaderProps['customer'];
-}) {
+function UserAvatar({customer}: {customer: HeaderProps['customer']}) {
   return (
     <Suspense
       fallback={
-        <NavLink to="/account/login" aria-label="Account" className="text-gray-500 hover:text-navy">
+        <NavLink
+          to="/account/login"
+          aria-label="Account"
+          className="text-gray-500 hover:text-navy"
+        >
           <UserIcon />
         </NavLink>
       }
@@ -421,7 +417,11 @@ function UserAvatar({
               selectedLocation={resolvedCustomer.selectedLocation}
             />
           ) : (
-            <NavLink to="/account/login" aria-label="Account" className="text-gray-500 hover:text-navy">
+            <NavLink
+              to="/account/login"
+              aria-label="Account"
+              className="text-gray-500 hover:text-navy"
+            >
               <UserIcon />
             </NavLink>
           )
@@ -433,7 +433,16 @@ function UserAvatar({
 
 function MailIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="3" y="5" width="18" height="14" rx="2" />
       <path d="M3 7l9 6 9-6" />
     </svg>
@@ -442,7 +451,16 @@ function MailIcon() {
 
 function UserIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="12" cy="8" r="4" />
       <path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" />
     </svg>
@@ -451,7 +469,16 @@ function UserIcon() {
 
 function BagIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M6 8h12l1 12H5L6 8z" />
       <path d="M9 8V6a3 3 0 0 1 6 0v2" />
     </svg>

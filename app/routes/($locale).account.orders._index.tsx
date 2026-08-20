@@ -10,6 +10,7 @@ import {
   buildOrderSearchQuery,
   locationIdToParam,
   parseOrderFilters,
+  roleCanViewAllLocationOrders,
   ORDER_FILTER_FIELDS,
 } from '~/lib/orderFilters';
 import {OrdersSection} from '~/components/Account/OrdersSection';
@@ -71,6 +72,7 @@ const COMPANY_LOCATIONS_QUERY = `#graphql-customer-account
     customer {
       companyContacts(first: 1) {
         nodes {
+          id
           company {
             id
             name
@@ -79,6 +81,17 @@ const COMPANY_LOCATIONS_QUERY = `#graphql-customer-account
             nodes {
               id
               name
+              roleAssignments(first: 20) {
+                nodes {
+                  contact {
+                    id
+                  }
+                  role {
+                    name
+                    resourcePermission(resource: ORDER)
+                  }
+                }
+              }
             }
           }
         }
@@ -121,6 +134,47 @@ const COMPANY_ORDERS_QUERY = `#graphql-customer-account
                 startCursor
                 endCursor
               }
+            }
+          }
+        }
+      }
+    }
+  }
+  ${ORDER_ITEM_FRAGMENT}
+` as const;
+
+// Own-orders scope for a role without ORDER view permission at its location.
+// Uses the contact's own connection rather than a
+// `purchasing_company_contact_id` filter — that filter is well-formed but
+// matches nothing, so it silently returned an empty list.
+const CONTACT_ORDERS_QUERY = `#graphql-customer-account
+  query ContactOrders(
+    $first: Int
+    $last: Int
+    $startCursor: String
+    $endCursor: String
+    $query: String
+  ) {
+    customer {
+      companyContacts(first: 1) {
+        nodes {
+          orders(
+            first: $first
+            last: $last
+            before: $startCursor
+            after: $endCursor
+            query: $query
+            sortKey: PROCESSED_AT
+            reverse: true
+          ) {
+            nodes {
+              ...OrderItem
+            }
+            pageInfo {
+              hasPreviousPage
+              hasNextPage
+              startCursor
+              endCursor
             }
           }
         }
@@ -194,8 +248,20 @@ export async function loader({context, request}: Route.LoaderArgs) {
   );
   const contact = scopeData?.customer?.companyContacts?.nodes?.[0] ?? null;
   const company = contact?.company ?? null;
-  const locations: Array<{id: string; name: string}> =
-    contact?.locations?.nodes ?? [];
+  type OrderLocation = {
+    id: string;
+    name: string;
+    roleAssignments?: {
+      nodes: Array<{
+        contact?: {id: string} | null;
+        role?: {
+          name?: string | null;
+          resourcePermission?: string[] | null;
+        } | null;
+      }>;
+    } | null;
+  };
+  const locations: OrderLocation[] = contact?.locations?.nodes ?? [];
 
   const scope: 'company' | 'customer' = company ? 'company' : 'customer';
 
@@ -208,6 +274,18 @@ export async function loader({context, request}: Route.LoaderArgs) {
         ) ?? locations[0])
       : null;
 
+  // At each location this contact holds one role. A location administrator
+  // sees every order placed for that location; an ordering-only role sees only
+  // the orders it placed, which is enforced by adding
+  // `purchasing_company_contact_id` to the query rather than filtering after
+  // the fact — so pagination and the total stay correct too.
+  const myRoleAtLocation = activeLocation?.roleAssignments?.nodes?.find(
+    (assignment: any) => assignment?.contact?.id === contact?.id,
+  );
+  const canViewAllAtLocation = roleCanViewAllLocationOrders(
+    myRoleAtLocation?.role?.resourcePermission,
+  );
+
   const query =
     buildOrderSearchQuery({
       ...filters,
@@ -219,7 +297,14 @@ export async function loader({context, request}: Route.LoaderArgs) {
   const variables = {...paginationVariables, query};
 
   let orders = null;
-  if (scope === 'company') {
+  if (scope === 'company' && !canViewAllAtLocation) {
+    // Ordering-only at this location: the contact's own orders, still narrowed
+    // to the active location by the same `query` filter.
+    const {data} = await customerAccount.query(CONTACT_ORDERS_QUERY, {
+      variables,
+    });
+    orders = data?.customer?.companyContacts?.nodes?.[0]?.orders ?? null;
+  } else if (scope === 'company') {
     const {data} = await customerAccount.query(COMPANY_ORDERS_QUERY, {
       variables,
     });
@@ -245,6 +330,9 @@ export async function loader({context, request}: Route.LoaderArgs) {
     locations,
     activeLocationId: activeLocation?.id ?? null,
     searchTerm: filters.name ?? '',
+    // Lets the UI say why a list is short, instead of looking broken.
+    scopedToOwnOrders: Boolean(activeLocation) && !canViewAllAtLocation,
+    roleName: myRoleAtLocation?.role?.name ?? null,
     shipmentStatus: filters.shipmentStatus ?? '',
     seo,
   };
@@ -258,6 +346,8 @@ export default function OrdersPage() {
     activeLocationId,
     searchTerm,
     shipmentStatus,
+    scopedToOwnOrders,
+    roleName,
   } = useLoaderData<typeof loader>();
 
   return (
@@ -272,6 +362,8 @@ export default function OrdersPage() {
         activeLocationId={activeLocationId}
         searchTerm={searchTerm}
         shipmentStatus={shipmentStatus}
+        scopedToOwnOrders={scopedToOwnOrders}
+        roleName={roleName}
       />
     </div>
   );
