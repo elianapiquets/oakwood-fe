@@ -35,6 +35,11 @@ export function locationIdToParam(gid: string): string {
   return gid.split('/').pop() ?? gid;
 }
 
+/** Inverse of `locationIdToParam`, for reading a location id back out of a URL. */
+export function locationParamToGid(param: string): string {
+  return `gid://shopify/CompanyLocation/${decodeURIComponent(param)}`;
+}
+
 /**
  * Parameters for filtering customer orders, see: https://shopify.dev/docs/api/customer/latest/queries/customer#returns-Customer.fields.orders.arguments.query
  */

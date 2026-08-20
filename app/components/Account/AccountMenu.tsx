@@ -14,6 +14,9 @@ const NAV_ITEMS = [
   {label: 'Order History', to: '/account/orders'},
 ];
 
+// Only for B2B customers: /account/company 404s without a company.
+const COMPANY_NAV_ITEM = {label: 'Company', to: '/account/company'};
+
 export function AccountMenu({
   name,
   email,
@@ -30,6 +33,7 @@ export function AccountMenu({
   const [open, setOpen] = useState(false);
   const {open: openLocationSwitcher} = useLocationSelection();
   const initial = name.charAt(0).toUpperCase();
+  const navItems = company ? [...NAV_ITEMS, COMPANY_NAV_ITEM] : NAV_ITEMS;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -80,7 +84,7 @@ export function AccountMenu({
         )}
 
         <div className="border-t border-slate-100 py-1">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <NavLink
               key={item.label}
               to={item.to}
