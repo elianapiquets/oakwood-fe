@@ -138,3 +138,55 @@ export async function fetchChemistryMap(
       .catch(() => []);
   return new Map(data.map((p) => [p.handle, p.chemistry]));
 }
+
+/**
+ * Billing details for a B2B company location, served by the custom backend
+ * because neither Shopify API exposes them to a logged-in customer:
+ *
+ * - Payment terms: `CompanyLocation.buyerExperienceConfiguration
+ *   .paymentTermsTemplate` exists in the **Admin** API ("the merchant
+ *   configured payment terms") but not in the Customer Account API, whose
+ *   `buyerExperienceConfiguration` carries only `deposit` and `payNowOnly`.
+ * - Payment methods: absent from `CompanyLocation` in *both* APIs — confirmed
+ *   by introspecting the store's live Admin schema, where the type has 29
+ *   fields and none return stored payment methods. Shopify's own hosted account
+ *   UI renders the section anyway, so it reads them through a private internal
+ *   endpoint. The backend returns an empty array to keep this contract stable
+ *   if a path ever turns up.
+ *
+ * Shaped for display (`label`/`detail`) so the backend owns the mapping from
+ * whichever Admin type it ends up reading, and this app doesn't need to know
+ * card-versus-bank specifics.
+ */
+export type BackendCompanyLocationBilling = {
+  paymentTerms: {
+    name: string;
+    dueInDays: number | null;
+    description: string | null;
+    type: string | null;
+  } | null;
+  paymentMethods: Array<{
+    id: string;
+    label: string;
+    detail: string | null;
+  }>;
+  /**
+   * From the Admin API's `CompanyLocation.taxSettings`, which the Customer
+   * Account API has no equivalent of.
+   */
+  tax: {taxId: string | null; taxExempt: boolean | null};
+};
+
+/** Returns null when the endpoint isn't implemented yet, so callers degrade. */
+export async function fetchCompanyLocationBilling(
+  locationId: string,
+): Promise<BackendCompanyLocationBilling | null> {
+  return fetch(
+    `${BACKEND_URL}/api/company-locations/${encodeURIComponent(locationId)}/billing`,
+    {headers: BACKEND_HEADERS},
+  )
+    .then((r) =>
+      r.ok ? (r.json() as Promise<BackendCompanyLocationBilling>) : null,
+    )
+    .catch(() => null);
+}
