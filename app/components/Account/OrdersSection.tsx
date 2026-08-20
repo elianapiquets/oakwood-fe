@@ -2,41 +2,66 @@ import {Pagination} from '@shopify/hydrogen';
 import {OrdersTable} from './OrdersTable';
 import {OrderEmptyState} from './OrderEmptyState';
 import {OrdersPager} from './OrdersPager';
-import {OrdersSearch} from './OrdersSearch';
+import {OrdersTabs, type OrdersTabLocation} from './OrdersTabs';
+import {OrdersToolbar} from './OrdersToolbar';
+
+interface OrdersSectionProps {
+  orders: any;
+  scope: 'company' | 'customer';
+  locations: OrdersTabLocation[];
+  activeLocationId: string | null;
+  searchTerm: string;
+  shipmentStatus: string;
+}
 
 /**
- * Wraps the table in Hydrogen's <Pagination>. Deliberately not
- * <PaginatedResourceSection>: that helper renders one element per node with no
- * shared wrapper, so it can't produce a single <table>/<tbody>.
+ * Composes the orders view: location tabs, the search/filter toolbar, the
+ * table, and the pager. Only the *data* differs per tab — the table and pager
+ * are the same components in every case, with the location applied server-side
+ * as an order-query filter.
  *
- * The pager uses `previousPageUrl`/`nextPageUrl` rather than Hydrogen's
- * `PreviousLink`/`NextLink`, because those helpers carry the pagination state
- * that makes pages accumulate. Discrete pages need plain links. Those URLs are
- * built from the current location's search params, so an active `?name=`
- * search survives paging.
- *
- * There's no page count: the Customer Account API's `OrderConnection` exposes
- * only edges/nodes/pageInfo — no total — so "page N of M" isn't derivable
- * without walking every page.
+ * Uses Hydrogen's <Pagination> directly rather than
+ * <PaginatedResourceSection>, which renders one element per node and so can't
+ * produce a single <table>/<tbody>. The pager builds plain links from
+ * `previousPageUrl`/`nextPageUrl` instead of Hydrogen's `PreviousLink`/
+ * `NextLink`, because those carry the state that makes pages accumulate; those
+ * URLs derive from the current search params, so the tab, search and filter
+ * all survive paging.
  */
 export function OrdersSection({
   orders,
   scope,
+  locations,
+  activeLocationId,
   searchTerm,
-}: {
-  orders: any;
-  scope: 'company' | 'customer';
-  searchTerm: string;
-}) {
+  shipmentStatus,
+}: OrdersSectionProps) {
   const hasOrders = Boolean(orders?.nodes?.length);
+  const isFiltered = Boolean(searchTerm || shipmentStatus);
+  const showTabs = scope === 'company' && locations.length > 0;
+
+  const chrome = (
+    <>
+      {showTabs && (
+        <OrdersTabs locations={locations} activeLocationId={activeLocationId} />
+      )}
+      {/* Keep the toolbar on a miss so filters can be cleared or retried, but
+          don't show it to someone with no orders and no filters applied. */}
+      {(hasOrders || isFiltered) && (
+        <OrdersToolbar
+          searchTerm={searchTerm}
+          shipmentStatus={shipmentStatus}
+          activeLocationId={activeLocationId}
+        />
+      )}
+    </>
+  );
 
   if (!hasOrders) {
     return (
       <div className="flex flex-col gap-4">
-        {/* Keep the box on a miss so the search can be cleared or retried, but
-            don't show it to a customer who has no orders at all. */}
-        {Boolean(searchTerm) && <OrdersSearch searchTerm={searchTerm} />}
-        <OrderEmptyState searchTerm={searchTerm} />
+        {chrome}
+        <OrderEmptyState searchTerm={searchTerm} isFiltered={isFiltered} />
       </div>
     );
   }
@@ -51,7 +76,7 @@ export function OrdersSection({
         nextPageUrl,
       }) => (
         <div className="flex flex-col gap-4">
-          <OrdersSearch searchTerm={searchTerm} />
+          {chrome}
           <OrdersTable
             orders={nodes}
             showCompanyColumns={scope === 'company'}

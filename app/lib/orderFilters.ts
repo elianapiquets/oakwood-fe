@@ -4,7 +4,36 @@
 export const ORDER_FILTER_FIELDS = {
   NAME: 'name',
   CONFIRMATION_NUMBER: 'confirmation_number',
+  /** URL param for the active company-location tab (numeric id). */
+  LOCATION: 'tab',
+  /** URL param for the shipment-state filter. */
+  SHIPMENT_STATUS: 'shipment',
 } as const;
+
+/**
+ * The order `query` argument supports `shipment_status` but NOT
+ * `fulfillment_status` (verified against the 2026-04 Customer API docs), so the
+ * state filter is built on shipment status. Note there is deliberately no
+ * "unfulfilled" option: an order with no shipment yet has no shipment status,
+ * so it can't be selected by this filter.
+ */
+export const SHIPMENT_STATUS_OPTIONS = [
+  {value: 'in_transit', status: 'IN_TRANSIT'},
+  {value: 'out_for_delivery', status: 'OUT_FOR_DELIVERY'},
+  {value: 'delivered', status: 'DELIVERED'},
+  {value: 'delayed', status: 'DELAYED'},
+  {value: 'attempted_delivery', status: 'ATTEMPTED_DELIVERY'},
+] as const;
+
+const VALID_SHIPMENT_STATUSES = new Set(
+  SHIPMENT_STATUS_OPTIONS.map((option) => option.value),
+);
+
+/** `gid://shopify/CompanyLocation/123` → `123`, for tidy URLs and because the
+ * search syntax wants the numeric id, not a GID. */
+export function locationIdToParam(gid: string): string {
+  return gid.split('/').pop() ?? gid;
+}
 
 /**
  * Parameters for filtering customer orders, see: https://shopify.dev/docs/api/customer/latest/queries/customer#returns-Customer.fields.orders.arguments.query
@@ -14,6 +43,10 @@ export interface OrderFilterParams {
   name?: string;
   /** Order confirmation number */
   confirmationNumber?: string;
+  /** Numeric company location id — scopes results to one location's orders. */
+  locationId?: string;
+  /** One of SHIPMENT_STATUS_OPTIONS' values. */
+  shipmentStatus?: string;
 }
 
 /**
@@ -58,6 +91,20 @@ export function buildOrderSearchQuery(
     }
   }
 
+  if (filters.locationId) {
+    const sanitizedLocation = sanitizeFilterValue(filters.locationId);
+    if (sanitizedLocation) {
+      queryParts.push(`purchasing_company_location_id:${sanitizedLocation}`);
+    }
+  }
+
+  if (filters.shipmentStatus) {
+    // Only ever emit a value we defined — never pass user input through.
+    if (VALID_SHIPMENT_STATUSES.has(filters.shipmentStatus as any)) {
+      queryParts.push(`shipment_status:${filters.shipmentStatus}`);
+    }
+  }
+
   return queryParts.length > 0 ? queryParts.join(' AND ') : undefined;
 }
 
@@ -84,6 +131,11 @@ export function parseOrderFilters(
   );
   if (confirmationNumber) {
     filters.confirmationNumber = confirmationNumber;
+  }
+
+  const shipmentStatus = searchParams.get(ORDER_FILTER_FIELDS.SHIPMENT_STATUS);
+  if (shipmentStatus && VALID_SHIPMENT_STATUSES.has(shipmentStatus as any)) {
+    filters.shipmentStatus = shipmentStatus;
   }
 
   return filters;

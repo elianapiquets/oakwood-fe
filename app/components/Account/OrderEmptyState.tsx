@@ -1,21 +1,31 @@
 import {Link} from 'react-router';
 
-export function OrderEmptyState({searchTerm}: {searchTerm?: string}) {
-  if (searchTerm) {
+export function OrderEmptyState({
+  searchTerm,
+  isFiltered,
+}: {
+  searchTerm?: string;
+  isFiltered?: boolean;
+}) {
+  if (searchTerm || isFiltered) {
     return (
       <div className="rounded border border-slate-200 bg-white px-6 py-16 text-center">
         <p className="text-base font-semibold text-slate-900">
-          No orders match #{searchTerm}
+          {searchTerm
+            ? `No orders match #${searchTerm}`
+            : 'No orders match this filter'}
         </p>
-        <p className="mt-1 text-sm text-slate-500">
-          Order numbers must match exactly.
-        </p>
+        {searchTerm && (
+          <p className="mt-1 text-sm text-slate-500">
+            Order numbers must match exactly.
+          </p>
+        )}
         <Link
           to="/account/orders"
           prefetch="intent"
           className="mt-4 inline-block text-sm font-medium text-teal hover:underline"
         >
-          Clear search
+          Clear filters
         </Link>
       </div>
     );

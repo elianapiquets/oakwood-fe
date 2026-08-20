@@ -5,9 +5,9 @@ const UserInformation = lazy(() =>
   import('./UserInformation').then((m) => ({default: m.UserInformation})),
 );
 
-const Company = lazy(() =>
-  import('./Company').then((m) => ({default: m.Company})),
-);
+// const Company = lazy(() =>
+//   import('./Company').then((m) => ({default: m.Company})),
+// );
 
 type CustomerMetafield = {key: string; value: string} | null;
 
@@ -95,12 +95,12 @@ function MyAccount({customer, allCompanies = []}: MyAccountProps) {
 
       <Suspense fallback={null}>
         <UserInformation customer={customer} />
-        <Company
-          customerId={customer?.id}
-          allCompanies={allCompanies}
-          companyRoles={companyRoles}
-          savedCompanyId={initialCompanyId}
-        />
+        {/*<Company*/}
+        {/*  customerId={customer?.id}*/}
+        {/*  allCompanies={allCompanies}*/}
+        {/*  companyRoles={companyRoles}*/}
+        {/*  savedCompanyId={initialCompanyId}*/}
+        {/*/>*/}
       </Suspense>
     </div>
   );

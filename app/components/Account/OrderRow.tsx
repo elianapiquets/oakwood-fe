@@ -100,15 +100,23 @@ export function OrderRow({
         {orderItemCountLabel(order)}
       </td>
 
-      <td className="px-4 py-4 text-sm text-slate-700">
-        {order.shippingLine?.title ?? '—'}
-        {delivery && (
-          <span
-            className={`block text-xs font-medium ${
-              DELIVERY_TONE_TEXT[shipmentStatusTone(shipmentStatus)]
-            }`}
-          >
-            {delivery}
+      <td className="px-4 py-4 text-sm">
+        {/* Leads with the delivery status so the column reads in the same
+            vocabulary as the Delivery filter. Orders with no shipment yet have
+            no delivery status at all — and can't be selected by the filter,
+            since `shipment_status` has nothing to match. */}
+        <span
+          className={`block font-medium ${
+            delivery
+              ? DELIVERY_TONE_TEXT[shipmentStatusTone(shipmentStatus)]
+              : 'text-slate-400'
+          }`}
+        >
+          {delivery ?? 'Not shipped'}
+        </span>
+        {order.shippingLine?.title && (
+          <span className="block text-xs text-slate-500">
+            {order.shippingLine.title}
           </span>
         )}
       </td>
