@@ -1,3 +1,4 @@
+import {useState} from 'react';
 import {useSubmit, useNavigation} from 'react-router';
 import {useForm} from 'react-hook-form';
 import type {SubmitHandler} from 'react-hook-form';
@@ -5,7 +6,11 @@ import {zodResolver} from '@hookform/resolvers/zod';
 
 import {Checkbox, Form} from '~/components/ui';
 import {CompanyCard} from '~/components/Account/company/CompanyCard';
-import {AddressPlaceholder} from './AddressPlaceholder';
+import {
+  AddressDialog,
+  formatAddressLines,
+  type AddressValues,
+} from '~/components/Address';
 import {
   CREATE_LOCATION_DEFAULTS,
   NO_PAYMENT_TERMS,
@@ -16,6 +21,51 @@ import {
 } from './constants';
 
 export type PaymentTermsOption = {id: string; name: string};
+
+/**
+ * A saved address, or a button to add one. A location has exactly one shipping
+ * and one billing address, so saving replaces rather than appends.
+ */
+function AddressSummary({
+  address,
+  emptyLabel,
+  onEdit,
+}: {
+  address: AddressValues | null;
+  emptyLabel: string;
+  onEdit: () => void;
+}) {
+  if (!address) {
+    return (
+      <button
+        type="button"
+        onClick={onEdit}
+        className="flex w-full items-center gap-2 rounded border border-dashed border-slate-300 px-3 py-3 text-left text-sm text-slate-600 hover:bg-slate-50"
+      >
+        + {emptyLabel}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-start justify-between gap-4 rounded border border-slate-200 px-3 py-3">
+      <div className="text-sm text-slate-700">
+        {formatAddressLines(address).map((line) => (
+          <span key={line} className="block">
+            {line}
+          </span>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={onEdit}
+        className="text-sm text-navy underline"
+      >
+        Edit
+      </button>
+    </div>
+  );
+}
 
 /**
  * Company location create form, modelled on Shopify admin's "New location".
@@ -56,14 +106,51 @@ export function CreateLocationForm({
     ...paymentTermsOptions.map(({id, name}) => ({value: id, label: name})),
   ];
 
+  // The addresses live outside the location's `useForm`. `FormController`
+  // resolves errors with a flat `formState.errors[name]` lookup, so a nested
+  // path like `shippingAddress.address1` would never find its message — the
+  // dialog validates them with its own form instead.
+  const [shippingAddress, setShippingAddress] = useState<AddressValues | null>(
+    null,
+  );
+  const [billingAddress, setBillingAddress] = useState<AddressValues | null>(
+    null,
+  );
+  const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
+  const [openDialog, setOpenDialog] = useState<'shipping' | 'billing' | null>(
+    null,
+  );
+  const [addressError, setAddressError] = useState<string | null>(null);
+
   const onSubmit: SubmitHandler<CreateLocationValues> = (values) => {
-    // TEMP diagnostic — remove once the create path is confirmed.
-    console.warn('[create-location] 1. rhf values', values);
+    // Shopify rejects a location with no shipping address, so say so here
+    // rather than spend a round trip finding out.
+    if (!shippingAddress) {
+      setAddressError('A shipping address is required.');
+      return;
+    }
+
+    if (!billingSameAsShipping && !billingAddress) {
+      setAddressError(
+        'Add a billing address, or tick "Billing address is same as shipping address".',
+      );
+      return;
+    }
+
+    setAddressError(null);
 
     const formData = new FormData();
     for (const [key, value] of Object.entries(values)) {
       formData.append(key, String(value));
     }
+
+    // One JSON blob per address, rather than ten flat keys each.
+    formData.append('shippingAddress', JSON.stringify(shippingAddress));
+    formData.append('billingSameAsShipping', String(billingSameAsShipping));
+    if (!billingSameAsShipping && billingAddress) {
+      formData.append('billingAddress', JSON.stringify(billingAddress));
+    }
+
     void submit(formData, {method: 'post'});
   };
 
@@ -72,29 +159,73 @@ export function CreateLocationForm({
       methods={methods}
       onSubmit={(event) => void methods.handleSubmit(onSubmit)(event)}
     >
-      <div>
-          {serverError ? (
-            <p
-              role="alert"
-              className="mb-6 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-            >
-              {serverError}
-            </p>
-          ) : null}
-      </div>
-
       <CompanyCard title="Shipping address">
         <div className="flex flex-col gap-3 px-4 py-4">
-          <AddressPlaceholder label="Add address" />
+          <AddressSummary
+            address={shippingAddress}
+            emptyLabel="Add address"
+            onEdit={() => setOpenDialog('shipping')}
+          />
+
           <label
             htmlFor="billingSameAsShipping"
-            className="flex items-center gap-2 text-sm text-slate-400"
+            className="flex items-center gap-2 text-sm text-slate-700"
           >
-            <Checkbox id="billingSameAsShipping" checked disabled />
+            <Checkbox
+              id="billingSameAsShipping"
+              checked={billingSameAsShipping}
+              onCheckedChange={(checked) => {
+                setBillingSameAsShipping(checked);
+                setAddressError(null);
+              }}
+            />
             Billing address is same as shipping address
           </label>
+
+          {billingSameAsShipping ? null : (
+            <div className="flex flex-col gap-2 border-t border-slate-100 pt-3">
+              <span className="text-sm font-medium text-slate-900">
+                Billing address
+              </span>
+              <AddressSummary
+                address={billingAddress}
+                emptyLabel="Add billing address"
+                onEdit={() => setOpenDialog('billing')}
+              />
+            </div>
+          )}
+
+          {addressError ? (
+            <p role="alert" className="text-xs text-red-600">
+              {addressError}
+            </p>
+          ) : null}
         </div>
       </CompanyCard>
+
+      <AddressDialog
+        open={openDialog === 'shipping'}
+        onOpenChange={(next) => setOpenDialog(next ? 'shipping' : null)}
+        title={
+          shippingAddress ? 'Edit shipping address' : 'Add shipping address'
+        }
+        value={shippingAddress}
+        onSave={(address) => {
+          setShippingAddress(address);
+          setAddressError(null);
+        }}
+      />
+
+      <AddressDialog
+        open={openDialog === 'billing'}
+        onOpenChange={(next) => setOpenDialog(next ? 'billing' : null)}
+        title={billingAddress ? 'Edit billing address' : 'Add billing address'}
+        value={billingAddress}
+        onSave={(address) => {
+          setBillingAddress(address);
+          setAddressError(null);
+        }}
+      />
 
       <CompanyCard title="Location details" className="mt-6">
         <div className="flex flex-col gap-4 px-4 py-4">
@@ -188,6 +319,16 @@ export function CreateLocationForm({
         >
           {isSaving ? 'Saving…' : 'Save'}
         </button>
+      </div>
+      <div>
+        {serverError ? (
+          <p
+            role="alert"
+            className="mb-6 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          >
+            {serverError}
+          </p>
+        ) : null}
       </div>
     </Form>
   );

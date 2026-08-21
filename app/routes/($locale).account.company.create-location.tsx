@@ -14,9 +14,13 @@ import {COMPANY_QUERY} from '~/graphql/customer-account/CompanyOverviewQuery';
 import {
   CreateLocationForm,
   NO_PAYMENT_TERMS,
-  TEMP_SHIPPING_ADDRESS,
   createLocationSchema,
 } from '~/components/Account/Location';
+import {
+  addressSchema,
+  toAddressInput,
+  type AddressValues,
+} from '~/components/Address';
 import {CompanyBreadcrumb} from '~/components/Account/company/CompanyCard';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
@@ -85,9 +89,6 @@ export async function action({request, context}: Route.ActionArgs) {
   const formData = await request.formData();
   const raw = Object.fromEntries(formData);
 
-  // TEMP diagnostic — remove once the create path is confirmed.
-  console.warn('[create-location] 2. raw formData', raw);
-
   // Re-validated server-side: the client resolver is a convenience, not a
   // guarantee, and FormData arrives as strings either way.
   const parsed = createLocationSchema.safeParse({
@@ -96,12 +97,6 @@ export async function action({request, context}: Route.ActionArgs) {
   });
 
   if (!parsed.success) {
-    // TEMP diagnostic — remove once the create path is confirmed.
-    console.log(
-      '[create-location] 3. ZOD FAILED',
-      JSON.stringify(parsed.error.issues, null, 2),
-    );
-
     return {
       error:
         parsed.error.issues[0]?.message ?? 'Please check the form and retry.',
@@ -109,6 +104,37 @@ export async function action({request, context}: Route.ActionArgs) {
   }
 
   const values = parsed.data;
+
+  /**
+   * The addresses arrive as JSON, one blob each, because they're edited in a
+   * dialog with its own form rather than as fields of this one. Re-validated
+   * here for the same reason the rest is: the client resolver is a convenience,
+   * not a guarantee.
+   */
+  function parseAddress(field: string): AddressValues | null | 'invalid' {
+    const value = raw[field];
+    if (typeof value !== 'string' || !value) return null;
+
+    try {
+      const result = addressSchema.safeParse(JSON.parse(value));
+      return result.success ? result.data : 'invalid';
+    } catch {
+      return 'invalid';
+    }
+  }
+
+  const shippingAddress = parseAddress('shippingAddress');
+  const billingAddress = parseAddress('billingAddress');
+  const billingSameAsShipping = raw.billingSameAsShipping === 'true';
+
+  if (shippingAddress === 'invalid' || billingAddress === 'invalid') {
+    return {error: 'That address is incomplete. Please check it and retry.'};
+  }
+
+  // Shopify rejects the mutation outright without a shipping address.
+  if (!shippingAddress) {
+    return {error: 'A shipping address is required.'};
+  }
 
   const input = {
     name: values.name,
@@ -120,10 +146,13 @@ export async function action({request, context}: Route.ActionArgs) {
     // `companyContacts.locations`. Assigning the creator makes the location they
     // just made reachable, and puts it in their locations list.
     assignContactId: contactId,
-    // TEMP — see TEMP_SHIPPING_ADDRESS. Shopify rejects the mutation without a
-    // shipping address, so this stands in until the real fields exist.
-    shippingAddress: {...TEMP_SHIPPING_ADDRESS},
-    billingSameAsShipping: true,
+    shippingAddress: toAddressInput(shippingAddress),
+    // When this is true Shopify ignores `billingAddress` entirely, so it's only
+    // sent when the customer supplied a different one.
+    billingSameAsShipping,
+    ...(!billingSameAsShipping && billingAddress
+      ? {billingAddress: toAddressInput(billingAddress)}
+      : {}),
     ...(values.taxRegistrationId
       ? {taxRegistrationId: values.taxRegistrationId}
       : {}),
@@ -139,19 +168,9 @@ export async function action({request, context}: Route.ActionArgs) {
     },
   };
 
-  // TEMP diagnostic — remove once the create path is confirmed.
-  console.log(
-    '[create-location] 4. admin input',
-    company.id,
-    JSON.stringify(input, null, 2),
-  );
-
   const result = await createCompanyLocation(company.id, input);
 
   if (!result.ok) {
-    // TEMP diagnostic — remove once the create path is confirmed.
-    console.warn('[create-location] 5. BACKEND FAILED', result.error);
-
     return {error: result.error};
   }
 

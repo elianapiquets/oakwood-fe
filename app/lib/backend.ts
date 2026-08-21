@@ -238,9 +238,11 @@ export type CreateCompanyLocationBody = {
   assignContactId?: string;
   /** Required in practice, despite being optional on `CompanyLocationInput`. */
   shippingAddress?: CreateCompanyLocationAddress;
+  /** Ignored by Shopify when `billingSameAsShipping` is true. */
+  billingAddress?: CreateCompanyLocationAddress;
+  billingSameAsShipping?: boolean;
   taxRegistrationId?: string;
   taxExempt?: boolean;
-  billingSameAsShipping?: boolean;
   buyerExperienceConfiguration?: {
     paymentTermsTemplateId?: string;
     checkoutToDraft?: boolean;
@@ -280,13 +282,6 @@ export async function createCompanyLocation(
       | null;
 
     if (!response.ok || !payload?.id) {
-      // TEMP diagnostic — remove once the create path is confirmed.
-      console.log(
-        '[create-location] 4b. backend response',
-        response.status,
-        JSON.stringify(payload),
-      );
-
       return {
         ok: false,
         error: payload?.error ?? `Backend responded ${response.status}`,

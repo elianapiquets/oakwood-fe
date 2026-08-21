@@ -59,21 +59,3 @@ export const CREATE_LOCATION_DEFAULTS: CreateLocationValues = {
   taxRegistrationId: '',
   taxSetting: 'COLLECT',
 };
-
-/**
- * TEMPORARY. `companyLocationCreate` rejects a location with no shipping
- * address — `userErrors: [{field: ['input','shippingAddress'], message:
- * 'Invalid input.'}]` — even though `CompanyLocationInput` marks the field
- * optional and no field inside `CompanyAddressInput` is non-null.
- *
- * Sent so the rest of the pipeline (payment terms, checkout config, tax) can be
- * verified end to end. **Delete this the moment the real address fields land** —
- * until then every location created through this form claims the same address.
- */
-export const TEMP_SHIPPING_ADDRESS = {
-  address1: '1741 Old Dillon Rd',
-  city: 'Estill',
-  zoneCode: 'SC',
-  zip: '29918',
-  countryCode: 'US',
-} as const;

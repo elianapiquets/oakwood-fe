@@ -5,12 +5,8 @@ import {useFetcher} from 'react-router';
 
 import {Form} from '~/components/ui';
 import {BASE_FORM_CONFIG} from '~/lib/form';
-import {
-  userSchema,
-  US_STATE_OPTIONS,
-  COUNTRY_OPTIONS,
-  type UserFormValues,
-} from './constants';
+import {US_STATE_OPTIONS, COUNTRY_OPTIONS} from '~/constants';
+import {userSchema, type UserFormValues} from './constants';
 
 type CustomerMetafield = {key: string; value: string} | null;
 
