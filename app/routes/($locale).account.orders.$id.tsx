@@ -3,11 +3,13 @@ import {getSeoMeta, type SeoConfig} from '@shopify/hydrogen';
 import type {Route} from './+types/($locale).account.orders.$id';
 import {getRootSeo} from '~/lib/seo';
 import {orderParamToGid} from '~/lib/orders';
-import {OrderDetailHeader} from '~/components/Account/OrderDetailHeader';
-import {OrderDetailLineItems} from '~/components/Account/OrderDetailLineItems';
-import {OrderDetailSummary} from '~/components/Account/OrderDetailSummary';
 import {getPathPrefix} from '~/lib/i18n';
 import {ORDER_QUERY} from '~/graphql/customer-account/OrderDetailQuery';
+import {
+  OrderDetailHeader,
+  OrderDetailLineItems,
+  OrderDetailSummary,
+} from '~/components/Account/Orders';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
   return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];

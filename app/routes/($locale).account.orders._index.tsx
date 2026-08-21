@@ -14,7 +14,6 @@ import {
   ORDER_FILTER_FIELDS,
 } from '~/lib/orderFilters';
 import {roleCanViewAllLocationOrders} from '~/lib/b2bRoles';
-import {OrdersSection} from '~/components/Account/OrdersSection';
 import {getPathPrefix} from '~/lib/i18n';
 import {
   ORDER_ITEM_FRAGMENT,
@@ -23,6 +22,7 @@ import {
   CONTACT_ORDERS_QUERY,
   CUSTOMER_ORDERS_QUERY,
 } from '~/graphql/customer-account/CustomerOrdersQueries';
+import {OrdersSection} from '~/components/Account/Orders';
 
 // Every column the orders table renders. Spread into both connections below so
 // the two scopes can share one row component.

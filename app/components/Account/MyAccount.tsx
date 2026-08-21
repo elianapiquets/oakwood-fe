@@ -2,7 +2,7 @@ import {lazy, Suspense} from 'react';
 import {Form} from 'react-router';
 
 const UserInformation = lazy(() =>
-  import('./UserInformation').then((m) => ({default: m.UserInformation})),
+  import('./User/UserInformation').then((m) => ({default: m.UserInformation})),
 );
 
 // const Company = lazy(() =>
