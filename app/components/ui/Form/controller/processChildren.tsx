@@ -11,9 +11,9 @@ type AdditionalProps = Record<string, unknown>;
  *
  * Non-elements pass through untouched — text, null, and the `undefined` that a
  * JSX comment line evaluates to. Note it does not recurse: only direct children are
- * injected into, so a field has to be an immediate child of its `Form2.Item`.
+ * injected into, so a field has to be an immediate child of its `Form.Item`.
  *
- * Moved here from `Form2.tsx` so `FormController2` can use it without importing
+ * Moved here from `Form.tsx` so `FormController` can use it without importing
  * from the component it renders inside.
  */
 export function processChildren(

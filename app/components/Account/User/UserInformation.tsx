@@ -3,7 +3,7 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import {useForm, type SubmitHandler} from 'react-hook-form';
 import {useFetcher} from 'react-router';
 
-import {Form2} from '~/components/ui';
+import {Form} from '~/components/ui';
 import {BASE_FORM_CONFIG} from '~/lib/form';
 import {
   userSchema,
@@ -174,76 +174,76 @@ function UserInformation({customer}: UserInformationProps) {
           }
         </div>
       )}
-      <Form2
+      <Form
         key="info"
         onSubmit={(event) =>
           void methodsUser.handleSubmit(onSubmitUser)(event)
         }
         className="w-full grid grid-cols-2 gap-x-6 gap-y-4 mt-6"
       >
-        <Form2.Item methods={methodsUser} name="firstName">
-          <Form2.Input placeholder="FIRST NAME" disabled={!isEditingUser} />
-          <Form2.Error />
-        </Form2.Item>
+        <Form.Item methods={methodsUser} name="firstName">
+          <Form.Input placeholder="FIRST NAME" disabled={!isEditingUser} />
+          <Form.Error />
+        </Form.Item>
 
-        <Form2.Item methods={methodsUser} name="lastName">
-          <Form2.Input placeholder="LAST NAME" disabled={!isEditingUser} />
-          <Form2.Error />
-        </Form2.Item>
+        <Form.Item methods={methodsUser} name="lastName">
+          <Form.Input placeholder="LAST NAME" disabled={!isEditingUser} />
+          <Form.Error />
+        </Form.Item>
 
-        <Form2.Item methods={methodsUser} name="address1">
-          <Form2.Input
+        <Form.Item methods={methodsUser} name="address1">
+          <Form.Input
             placeholder="ADDRESS LINE 1"
             disabled={!isEditingUser}
           />
-          <Form2.Error />
-        </Form2.Item>
+          <Form.Error />
+        </Form.Item>
 
-        <Form2.Item methods={methodsUser} name="address2">
-          <Form2.Input
+        <Form.Item methods={methodsUser} name="address2">
+          <Form.Input
             placeholder="APT, SUITE, ETC."
             disabled={!isEditingUser}
           />
-          <Form2.Error />
-        </Form2.Item>
+          <Form.Error />
+        </Form.Item>
 
-        <Form2.Item methods={methodsUser} name="city">
-          <Form2.Input placeholder="CITY" disabled={!isEditingUser} />
-          <Form2.Error />
-        </Form2.Item>
+        <Form.Item methods={methodsUser} name="city">
+          <Form.Input placeholder="CITY" disabled={!isEditingUser} />
+          <Form.Error />
+        </Form.Item>
 
-        <Form2.Item methods={methodsUser} name="zoneCode">
-          <Form2.Select
+        <Form.Item methods={methodsUser} name="zoneCode">
+          <Form.Select
             placeholder="STATE"
             options={US_STATE_OPTIONS}
             disabled={!isEditingUser}
           />
-          <Form2.Error />
-        </Form2.Item>
+          <Form.Error />
+        </Form.Item>
 
-        <Form2.Item methods={methodsUser} name="territoryCode">
-          <Form2.Select
+        <Form.Item methods={methodsUser} name="territoryCode">
+          <Form.Select
             placeholder="COUNTRY"
             options={COUNTRY_OPTIONS}
             disabled={!isEditingUser}
           />
-          <Form2.Error />
-        </Form2.Item>
+          <Form.Error />
+        </Form.Item>
 
-        <Form2.Item methods={methodsUser} name="zip">
-          <Form2.Input placeholder="POSTAL CODE" disabled={!isEditingUser} />
-          <Form2.Error />
-        </Form2.Item>
+        <Form.Item methods={methodsUser} name="zip">
+          <Form.Input placeholder="POSTAL CODE" disabled={!isEditingUser} />
+          <Form.Error />
+        </Form.Item>
 
         <div className="col-span-2">
-          <Form2.Input
+          <Form.Input
             placeholder="EMAIL ADDRESS"
             value={email}
             onChange={() => {}}
             disabled
           />
         </div>
-      </Form2>
+      </Form>
       {isEditingUser && (
         <div className="col-span-2">
           <button

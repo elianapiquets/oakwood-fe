@@ -7,10 +7,10 @@ import {Controller} from 'react-hook-form';
 
 import {processChildren} from './processChildren';
 
-type FormController2Props<Schema extends RequiredSchema> = {
+type FormControllerProps<Schema extends RequiredSchema> = {
   methods: UseFormReturn<Schema>;
   /**
-   * The field this group is bound to. Supplied by `Form2.Item`, not read off a
+   * The field this group is bound to. Supplied by `Form.Item`, not read off a
    * child — that inversion is the whole difference from v1's `FormController`,
    * where each child carried its own `name`.
    */
@@ -22,7 +22,7 @@ type FormController2Props<Schema extends RequiredSchema> = {
  * Binds one react-hook-form field and hands its state to every child.
  *
  * Opens a single `<Controller>` for `name` and injects the field props into the
- * children, so a `Form2.Item` can hold a label, a control and an error message
+ * children, so a `Form.Item` can hold a label, a control and an error message
  * and have each receive what it needs.
  *
  * `defaultValue` is deliberately not injected: passing it alongside `value`
@@ -33,11 +33,11 @@ type FormController2Props<Schema extends RequiredSchema> = {
  * injected into — and it spreads own props last, so a child that writes its own
  * `onChange` or `onBlur` in JSX replaces the injected one.
  */
-const FormController2 = <Schema extends RequiredSchema>({
+const FormController = <Schema extends RequiredSchema>({
   methods,
   name,
   children,
-}: FormController2Props<Schema>) => (
+}: FormControllerProps<Schema>) => (
   <Controller
     control={methods.control}
     name={name}
@@ -67,5 +67,5 @@ const FormController2 = <Schema extends RequiredSchema>({
   />
 );
 
-export {FormController2};
-export type {FormController2Props};
+export {FormController};
+export type {FormControllerProps};

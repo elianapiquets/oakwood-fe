@@ -3,7 +3,7 @@ import {useForm} from 'react-hook-form';
 import type {SubmitHandler} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 
-import {Checkbox, Form2} from '~/components/ui';
+import {Checkbox, Form} from '~/components/ui';
 import {CompanyCard} from '~/components/Account/company/CompanyCard';
 import {AddressPlaceholder} from './AddressPlaceholder';
 import {
@@ -20,11 +20,11 @@ export type PaymentTermsOption = {id: string; name: string};
 /**
  * Company location create form, modelled on Shopify admin's "New location".
  *
- * `Form2` is only the `<form>` element; each `Form2.Item` binds one field, so
+ * `Form` is only the `<form>` element; each `Form.Item` binds one field, so
  * the fields can sit at any depth — inside these cards, in this case — while
  * still sharing a single `useForm` instance.
  *
- * Hints live *outside* their `Form2.Item`. An Item forwards the injected field
+ * Hints live *outside* their `Form.Item`. An Item forwards the injected field
  * props to every element child, so a bare `<p>` inside one would receive
  * `errormessage`, `onChange` and friends as DOM attributes. Only field-aware
  * components belong directly inside an Item.
@@ -68,7 +68,7 @@ export function CreateLocationForm({
   };
 
   return (
-    <Form2 onSubmit={(event) => void methods.handleSubmit(onSubmit)(event)}>
+    <Form onSubmit={(event) => void methods.handleSubmit(onSubmit)(event)}>
       <div>
           {serverError ? (
             <p
@@ -96,22 +96,22 @@ export function CreateLocationForm({
       <CompanyCard title="Location details" className="mt-6">
         <div className="flex flex-col gap-4 px-4 py-4">
           <div className="flex flex-col gap-1.5">
-            <Form2.Item methods={methods} name="name">
-              <Form2.Label label="Location name" colon={false} required />
-              <Form2.Input id="name" placeholder="Midtown" />
-              <Form2.Error />
-            </Form2.Item>
+            <Form.Item methods={methods} name="name">
+              <Form.Label label="Location name" colon={false} required />
+              <Form.Input id="name" placeholder="Midtown" />
+              <Form.Error />
+            </Form.Item>
             <p className="text-xs text-slate-500">
               Used by customers to identify which location an order is for.
             </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Form2.Item methods={methods} name="externalId">
-              <Form2.Label label="Location ID" colon={false} />
-              <Form2.Input id="externalId" />
-              <Form2.Error />
-            </Form2.Item>
+            <Form.Item methods={methods} name="externalId">
+              <Form.Label label="Location ID" colon={false} />
+              <Form.Input id="externalId" />
+              <Form.Error />
+            </Form.Item>
             <p className="text-xs text-slate-500">
               Add an existing external ID, or leave blank to generate one from
               the name.
@@ -130,49 +130,49 @@ export function CreateLocationForm({
 
       <CompanyCard title="Payment terms" className="mt-6">
         <div className="px-4 py-4">
-          <Form2.Item methods={methods} name="paymentTermsTemplateId">
-            <Form2.Select
+          <Form.Item methods={methods} name="paymentTermsTemplateId">
+            <Form.Select
               id="paymentTermsTemplateId"
               options={paymentTermsItems}
             />
-            <Form2.Error />
-          </Form2.Item>
+            <Form.Error />
+          </Form.Item>
         </div>
       </CompanyCard>
 
       <CompanyCard title="Checkout" className="mt-6">
         <div className="flex flex-col gap-5 px-4 py-4">
-          <Form2.Item methods={methods} name="editableShippingAddress">
-            <Form2.Checkbox
+          <Form.Item methods={methods} name="editableShippingAddress">
+            <Form.Checkbox
               heading="Ship to address"
               label="Allow customers to ship to any one-time address"
             />
-            <Form2.Error />
-          </Form2.Item>
+            <Form.Error />
+          </Form.Item>
 
-          <Form2.Item methods={methods} name="orderSubmission">
-            <Form2.RadioGroup
+          <Form.Item methods={methods} name="orderSubmission">
+            <Form.RadioGroup
               label="Order submission"
               options={ORDER_SUBMISSION_OPTIONS}
             />
-            <Form2.Error />
-          </Form2.Item>
+            <Form.Error />
+          </Form.Item>
         </div>
       </CompanyCard>
 
       <CompanyCard title="Tax details" className="mt-6">
         <div className="flex flex-col gap-4 px-4 py-4">
-          <Form2.Item methods={methods} name="taxRegistrationId">
-            <Form2.Label label="Tax ID" colon={false} />
-            <Form2.Input id="taxRegistrationId" />
-            <Form2.Error />
-          </Form2.Item>
+          <Form.Item methods={methods} name="taxRegistrationId">
+            <Form.Label label="Tax ID" colon={false} />
+            <Form.Input id="taxRegistrationId" />
+            <Form.Error />
+          </Form.Item>
 
-          <Form2.Item methods={methods} name="taxSetting">
-            <Form2.Label label="Tax settings" colon={false} />
-            <Form2.Select id="taxSetting" options={TAX_SETTING_OPTIONS} />
-            <Form2.Error />
-          </Form2.Item>
+          <Form.Item methods={methods} name="taxSetting">
+            <Form.Label label="Tax settings" colon={false} />
+            <Form.Select id="taxSetting" options={TAX_SETTING_OPTIONS} />
+            <Form.Error />
+          </Form.Item>
         </div>
       </CompanyCard>
 
@@ -186,6 +186,6 @@ export function CreateLocationForm({
           {isSaving ? 'Saving…' : 'Save'}
         </button>
       </div>
-    </Form2>
+    </Form>
   );
 }

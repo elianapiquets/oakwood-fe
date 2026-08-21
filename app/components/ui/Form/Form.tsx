@@ -5,7 +5,7 @@ import React from 'react';
 
 import {clsx} from 'clsx';
 
-import {FormController2} from './controller/FormController2';
+import {FormController} from './controller/FormController';
 import {ErrorTextForm} from './ErrorTextForm';
 import {Typography} from '../Typography';
 import {Input as InputBase} from '../Input';
@@ -47,7 +47,7 @@ type LabelProps = {
 };
 
 /**
- * No `methods`: each `Form2.Item` carries its own, so the form element itself
+ * No `methods`: each `Form.Item` carries its own, so the form element itself
  * needs nothing but a submit handler.
  */
 type FormProps = {
@@ -75,7 +75,7 @@ const Error = ({className, errormessage}: ErrorProps) => {
 
 /**
  * One field. Owns the `name` and the `methods` and hands both to
- * `FormController2`, which opens a single rhf `Controller` and injects the field
+ * `FormController`, which opens a single rhf `Controller` and injects the field
  * state into whichever children want it — control, label, error message.
  */
 const Item = <TFieldValues extends FieldValues>({
@@ -90,9 +90,9 @@ const Item = <TFieldValues extends FieldValues>({
       !className && 'flex flex-col items-start gap-2 text-sm w-full',
     )}
   >
-    <FormController2 methods={methods} name={name}>
+    <FormController methods={methods} name={name}>
       {children}
-    </FormController2>
+    </FormController>
   </div>
 );
 
@@ -205,15 +205,15 @@ const Select = <TFieldValues extends FieldValues>({
 Select.displayName = 'Select';
 
 type InjectedFieldProps = {
-  /** Injected by FormController2; must not reach the DOM as an attribute. */
+  /** Injected by FormController; must not reach the DOM as an attribute. */
   errormessage?: string;
-  /** Injected by FormController2; camelCase, so React would warn about it. */
+  /** Injected by FormController; camelCase, so React would warn about it. */
   hasError?: boolean;
 };
 
 /**
  * shadcn's `Input` spreads every prop onto a real `<input>`, so the props
- * FormController2 injects have to be taken off here: `errormessage` would render
+ * FormController injects have to be taken off here: `errormessage` would render
  * as a literal attribute and `hasError` would trigger an unknown-prop warning.
  * `hasError` becomes `aria-invalid`, which the shadcn styles already key off.
  *
@@ -262,7 +262,7 @@ type CheckboxFieldProps = {
 } & InjectedFieldProps;
 
 /**
- * Boolean field. Maps FormController2's injected `value`/`onChange` onto Base
+ * Boolean field. Maps FormController's injected `value`/`onChange` onto Base
  * UI's `checked`/`onCheckedChange`.
  *
  * Renders its own `<label htmlFor>` rather than leaving that to the call site:
@@ -331,7 +331,7 @@ type RadioGroupFieldProps = {
  * Enum field. Takes an `options` array like `Select` does, so a call site never
  * has to compose the primitives itself.
  *
- * The heading is a plain `<span>`, not a `Form2.Label`: a radio group is not a
+ * The heading is a plain `<span>`, not a `Form.Label`: a radio group is not a
  * labelable control, so a `<label for>` pointing at it would dangle. The group
  * gets `aria-label` instead, and each option owns its id/htmlFor pair for the
  * same reason the checkbox does.
@@ -389,7 +389,7 @@ const RadioGroup = ({
   </div>
 );
 
-const Form2 = ({
+const Form = ({
   children,
   className,
   onSubmit,
@@ -404,23 +404,23 @@ const Form2 = ({
   </Component>
 );
 
-Form2.Item = Item;
+Form.Item = Item;
 
-Form2.Label = Label;
+Form.Label = Label;
 
-Form2.Input = Input;
+Form.Input = Input;
 
-Form2.TextArea = TextArea;
+Form.TextArea = TextArea;
 
-Form2.Select = Select;
+Form.Select = Select;
 
-Form2.Checkbox = Checkbox;
+Form.Checkbox = Checkbox;
 
-Form2.RadioGroup = RadioGroup;
-
-
-Form2.Error = Error;
+Form.RadioGroup = RadioGroup;
 
 
-export {Form2};
+Form.Error = Error;
+
+
+export {Form};
 export type {FormProps};
