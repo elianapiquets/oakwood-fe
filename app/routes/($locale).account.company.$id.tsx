@@ -6,6 +6,8 @@ import {getPathPrefix} from '~/lib/i18n';
 import {
   assignCompanyLocationAddress,
   fetchCompanyLocationBilling,
+  fetchPaymentTermsTemplates,
+  updateCompanyLocationPaymentTerms,
   updateCompanyLocationTax,
 } from '~/lib/backend';
 import {locationIdToParam, locationParamToGid} from '~/lib/orderFilters';
@@ -18,7 +20,9 @@ import {
 import {LOCATION_QUERY} from '~/graphql/customer-account/CompanyLocationQuery';
 import {
   LocationAddressCard,
+  LocationPaymentTermsCard,
   LocationTaxCard,
+  NO_PAYMENT_TERMS,
 } from '~/components/Account/Location';
 import {
   addressSchema,
@@ -180,6 +184,25 @@ export async function action({context, params, request}: Route.ActionArgs) {
     return {ok: true};
   }
 
+  if (intent === 'payment-terms') {
+    if (!permissions.location) {
+      return {error: 'You do not have permission to change payment terms.'};
+    }
+
+    const templateId = String(formData.get('paymentTermsTemplateId') ?? '');
+
+    const result = await updateCompanyLocationPaymentTerms(
+      locationIdToParam(locationId),
+      // The local "no terms" option clears the template rather than sending a
+      // sentinel Shopify wouldn't recognise.
+      templateId === NO_PAYMENT_TERMS ? null : templateId,
+    );
+
+    if (!result.ok) return {error: result.error};
+
+    return {ok: true};
+  }
+
   if (intent !== 'address') {
     return {error: 'Unsupported action'};
   }
@@ -294,6 +317,9 @@ export async function loader({context, params}: Route.LoaderArgs) {
   //     stored payment methods, neither of which the Customer Account API has
   //  2. the terms actually applied to the location's most recent order, which
   //     is the best the Customer Account API can offer
+  // Both hit the backend; run them together rather than in series.
+  const paymentTermsOptionsPromise = fetchPaymentTermsTemplates();
+
   const billing = await fetchCompanyLocationBilling(
     locationIdToParam(locationId),
   );
@@ -341,6 +367,9 @@ export async function loader({context, params}: Route.LoaderArgs) {
     location,
     shippingAddress: toAddressValues(location.shippingAddress),
     billingAddress: toAddressValues(location.billingAddress),
+    paymentTermsOptions: (await paymentTermsOptionsPromise).map(
+      ({id, name}) => ({id, name}),
+    ),
     permissions: locationPermissions(
       contact?.id ?? null,
       location.roleAssignments?.nodes ?? [],
@@ -361,6 +390,7 @@ export default function CompanyLocationPage() {
     shippingAddress,
     billingAddress,
     permissions,
+    paymentTermsOptions,
     companyName,
     contacts,
     paymentTerms,
@@ -419,39 +449,12 @@ export default function CompanyLocationPage() {
           unavailable={billingUnavailable}
         />
 
-        <CompanyCard
-          title="Payment Terms"
-
-        >
-          <div className="flex items-start gap-3 px-4 py-4 text-sm text-slate-700">
-            {paymentTerms ? (
-              <>
-                <span className="inline-block rounded border border-blue-200 bg-blue-50 px-3 py-2 font-bold text-blue-700">
-                  {paymentTerms.name}
-                </span>
-                <span className="pt-2 text-xs text-slate-500">
-                  {paymentTerms.description ??
-                    (paymentTerms.dueInDays
-                      ? `Payment due within ${paymentTerms.dueInDays} days of invoice.`
-                      : null) ??
-                    (paymentTerms.source === 'order'
-                      ? "From this location's most recent order."
-                      : null)}
-                </span>
-              </>
-            ) : typeof payNowOnly === 'boolean' ? (
-              <span className="inline-block rounded border border-blue-200 bg-blue-50 px-3 py-2 font-bold text-blue-700">
-                {payNowOnly ? 'Pay now' : 'Net terms'}
-              </span>
-            ) : billingUnavailable ? (
-              <span className="text-slate-400">
-                Couldn&apos;t load payment terms — the backend is unreachable.
-              </span>
-            ) : (
-              <span className="text-slate-400">Not configured</span>
-            )}
-          </div>
-        </CompanyCard>
+        <LocationPaymentTermsCard
+          terms={paymentTerms}
+          options={paymentTermsOptions}
+          payNowOnly={payNowOnly ?? null}
+          canEdit={permissions.location}
+        />
         <CompanyCard
           title="Payment Methods"
 

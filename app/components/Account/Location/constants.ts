@@ -65,3 +65,9 @@ export const CREATE_LOCATION_DEFAULTS: CreateLocationValues = {
   taxRegistrationId: '',
   taxSetting: 'COLLECT',
 };
+
+/**
+ * A real `PaymentTermsTemplate` — id and display name. Shared by the create
+ * form and the location card, both of which need the gid to send.
+ */
+export type PaymentTermsOption = {id: string; name: string};

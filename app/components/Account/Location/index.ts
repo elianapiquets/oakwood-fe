@@ -4,3 +4,4 @@ export * from './constants';
 export * from './CreateLocationForm';
 export * from './LocationAddressCard';
 export * from './LocationTaxCard';
+export * from './LocationPaymentTermsCard';

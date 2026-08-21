@@ -174,7 +174,12 @@ export type BackendCompanyLocationBilling = {
    * From the Admin API's `CompanyLocation.taxSettings`, which the Customer
    * Account API has no equivalent of.
    */
-  tax: {taxId: string | null; taxExempt: boolean | null};
+  tax: {taxId: string | null; taxExempt: boolean | null  /** Preserved when payment terms are updated — same config object. */
+  checkout?: {
+    checkoutToDraft: boolean | null;
+    editableShippingAddress: boolean | null;
+  };
+};
 };
 
 /** Returns null when the endpoint isn't implemented yet, so callers degrade. */
@@ -364,6 +369,48 @@ export async function updateCompanyLocationTax(
         method: 'POST',
         headers: {...BACKEND_HEADERS, 'Content-Type': 'application/json'},
         body: JSON.stringify(settings),
+      },
+    );
+
+    const payload = (await response.json().catch(() => null)) as
+      | {ok?: boolean; error?: string}
+      | null;
+
+    if (!response.ok || !payload?.ok) {
+      return {
+        ok: false,
+        error: payload?.error ?? `Backend responded ${response.status}`,
+      };
+    }
+
+    return {ok: true};
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error ? error.message : 'Could not reach the backend',
+    };
+  }
+}
+
+/**
+ * Sets a location's payment terms template. `null` clears them.
+ *
+ * The backend reads the location's current checkout flags and sends them back
+ * alongside, since payment terms live in the same `buyerExperienceConfiguration`
+ * object.
+ */
+export async function updateCompanyLocationPaymentTerms(
+  locationId: string,
+  paymentTermsTemplateId: string | null,
+): Promise<{ok: true} | {ok: false; error: string}> {
+  try {
+    const response = await fetch(
+      `${BACKEND_URL}/api/company-locations/${encodeURIComponent(locationId)}/payment-terms`,
+      {
+        method: 'POST',
+        headers: {...BACKEND_HEADERS, 'Content-Type': 'application/json'},
+        body: JSON.stringify({paymentTermsTemplateId}),
       },
     );
 

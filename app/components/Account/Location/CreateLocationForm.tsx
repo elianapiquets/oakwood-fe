@@ -18,9 +18,8 @@ import {
   TAX_SETTING_OPTIONS,
   createLocationSchema,
   type CreateLocationValues,
+  type PaymentTermsOption,
 } from './constants';
-
-export type PaymentTermsOption = {id: string; name: string};
 
 /**
  * A saved address, or a button to add one. A location has exactly one shipping
