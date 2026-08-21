@@ -95,7 +95,7 @@ function B2BLocationBoundary({
         {(resolved) => (
           <B2BLocationProvider
             company={resolved?.company ?? null}
-            companyLocationId={resolved?.selectedLocation?.id ?? null}
+            companyLocationId={resolved?.selectedLocationId ?? null}
             locations={resolved?.locations ?? []}
             needsLocationSelection={Boolean(resolved?.needsLocationSelection)}
           >

@@ -35,7 +35,7 @@ export async function action({request, context}: Route.ActionArgs) {
   /** Lines dropped by a buyer-identity change, surfaced to the cart UI. */
   let removedLineCount = 0;
   /** Which path actually applied the company location. */
-  let strategy: 'updated' | 'recreated' = 'updated';
+  let strategy: 'created' | 'updated' | 'recreated' = 'updated';
 
   switch (action) {
     case CartForm.ACTIONS.LinesAdd:
@@ -100,6 +100,38 @@ export async function action({request, context}: Route.ActionArgs) {
         if (!ownLocationIds.has(requestedLocationId)) {
           return data({error: 'Invalid location'}, {status: 403});
         }
+      }
+
+      // Hydrogen's `cartBuyerIdentityUpdate` passes `cartId: getCartId()`
+      // straight into the mutation, so with no cart yet the mutation fails —
+      // which is why the first location chosen after login never stuck, while
+      // the second (by which point browsing had created a cart) did. Create the
+      // cart already carrying the location instead.
+      //
+      // `cartCreate` reads the session buyer but never writes it, unlike
+      // `cartBuyerIdentityUpdate` which calls `setBuyer` itself. So the session
+      // write has to be explicit here, or root's loader has nothing to read
+      // back and the choice looks discarded.
+      if (requestedLocationId && !cart.getCartId()) {
+        customerAccount.setBuyer({companyLocationId: requestedLocationId});
+
+        result = await cart.create({
+          buyerIdentity: {companyLocationId: requestedLocationId},
+        });
+
+        if (result?.errors?.length || result?.userErrors?.length) {
+          return data(
+            {
+              error: 'Failed to switch location',
+              errors: result.errors,
+              userErrors: result.userErrors,
+            },
+            {status: 500},
+          );
+        }
+
+        strategy = 'created';
+        break;
       }
 
       // Shopify documents this mutation as able to invalidate a cart:

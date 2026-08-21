@@ -154,7 +154,17 @@ export interface CustomerData {
   email: string;
   company: {id: string; name: string} | null;
   locations: CustomerCompanyLocation[];
+  /**
+   * For display. Falls back to the only location when the customer has exactly
+   * one, so the account menu shows it before the session has been written.
+   */
   selectedLocation: CustomerCompanyLocation | null;
+  /**
+   * The raw session-backed choice, with no fallback. This is what decides
+   * whether a location still needs persisting — `selectedLocation` can't, since
+   * its fallback would make an unsaved single-location customer look settled.
+   */
+  selectedLocationId: string | null;
   needsLocationSelection: boolean;
 }
 
@@ -214,6 +224,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
         company,
         locations,
         selectedLocation,
+        selectedLocationId,
         needsLocationSelection,
       };
     })

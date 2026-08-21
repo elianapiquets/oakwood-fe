@@ -16,6 +16,12 @@ export type B2BLocationContextValue = {
   locations: CustomerCompanyLocation[];
   modalOpen: boolean;
   setModalOpen: (open: boolean) => void;
+  /**
+   * True while the customer belongs to a company, has several locations, and
+   * none is selected. The selector refuses to be dismissed in this state — a
+   * cart with no company location can't check out as B2B.
+   */
+  needsLocationSelection: boolean;
 };
 
 const defaultValue: B2BLocationContextValue = {
@@ -24,6 +30,7 @@ const defaultValue: B2BLocationContextValue = {
   locations: [],
   modalOpen: false,
   setModalOpen: () => {},
+  needsLocationSelection: false,
 };
 
 const B2BLocationContext = createContext<B2BLocationContextValue>(defaultValue);
@@ -89,8 +96,12 @@ export function B2BLocationProvider({
       modalOpen: (needsLocationSelection && !dismissed) || requested,
       setModalOpen: (open: boolean) => {
         setRequested(open);
-        if (!open) setDismissed(true);
+        // A required selection can't be dismissed, so don't record it as one —
+        // otherwise `dismissed` would suppress the prompt for the rest of the
+        // session and leave the customer with no location at all.
+        if (!open && !needsLocationSelection) setDismissed(true);
       },
+      needsLocationSelection,
     }),
     [
       company,
