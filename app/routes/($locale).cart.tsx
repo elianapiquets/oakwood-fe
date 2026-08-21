@@ -4,7 +4,7 @@ import type {CartQueryDataReturn, SeoConfig} from '@shopify/hydrogen';
 import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {CartForm, getSeoMeta} from '@shopify/hydrogen';
-import {CartMain} from '~/components/CartMain';
+import {CartMain} from '~/components/Cart';
 import {getRootSeo} from '~/lib/seo';
 import {getPathPrefix} from '~/lib/i18n';
 import {CUSTOMER_LOCATION_IDS_QUERY} from '~/graphql/customer-account/CartCustomerLocationIdsQuery';

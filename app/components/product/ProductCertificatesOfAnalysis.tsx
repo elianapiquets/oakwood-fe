@@ -29,9 +29,9 @@ export function ProductCertificatesOfAnalysis({
         Batch Certificates of Analysis
       </h4>
       <p className="mt-2 text-sm text-slate-600">
-        Each lot is individually tested and certified. Download the
-        Certificate of Analysis for your specific batch using the lot number
-        printed on your product label.
+        Each lot is individually tested and certified. Download the Certificate
+        of Analysis for your specific batch using the lot number printed on your
+        product label.
       </p>
 
       {certificates.length > 0 ? (

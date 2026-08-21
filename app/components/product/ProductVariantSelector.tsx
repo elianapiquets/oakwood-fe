@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import {Link, useNavigate} from 'react-router';
 import type {MappedProductOptions} from '@shopify/hydrogen';
-import {AddToCartButton} from '~/components/AddToCartButton';
+import {AddToCartButton} from '~/components/Cart';
 import {useAside} from '~/components/Aside';
 
 export function ProductVariantSelector({

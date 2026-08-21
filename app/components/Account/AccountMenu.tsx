@@ -2,7 +2,7 @@ import {useState} from 'react';
 import {Form, NavLink} from 'react-router';
 import {Popover, PopoverTrigger, PopoverContent} from '~/components/ui';
 import type {CustomerCompanyLocation} from '~/root';
-import {useB2BLocation} from '~/components/B2BLocationProvider';
+import {useB2BLocation} from '~/components/Account/Location';
 import {BriefcaseIcon, PinIcon} from './icons';
 
 const NAV_ITEMS = [

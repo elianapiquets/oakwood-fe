@@ -13,12 +13,6 @@ import {getBuyerContext} from '~/lib/buyer';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {fetchProductByHandle} from '~/lib/backend';
 import {getRootSeo, truncate} from '~/lib/seo';
-import {ProductBreadcrumb} from '~/components/product/ProductBreadcrumb';
-import {ProductGallery} from '~/components/product/ProductGallery';
-import {ProductInfoColumn} from '~/components/product/ProductInfoColumn';
-import {ProductDetailsSection} from '~/components/product/ProductDetailsSection';
-import type {SafetyDataSheetData} from '~/components/product/ProductSafetyInformation';
-import type {CertificateOfAnalysis} from '~/components/product/ProductCertificatesOfAnalysis';
 import {getPathPrefix} from '~/lib/i18n';
 import {
   PRODUCT_VARIANT_FRAGMENT,
@@ -28,6 +22,14 @@ import {
   CERTIFICATES_OF_ANALYSIS_QUERY,
 } from '~/graphql/storefront/ProductQueries';
 import {URL_REDIRECTS_QUERY} from '~/graphql/storefront/RedirectQuery';
+import {
+  ProductBreadcrumb,
+  ProductGallery,
+  ProductInfoColumn,
+  ProductDetailsSection,
+  type SafetyDataSheetData,
+  type CertificateOfAnalysis,
+} from '~/components/product';
 
 export const meta: Route.MetaFunction = ({data, matches}) => {
   return getSeoMeta(getRootSeo(matches), data?.seo) ?? [];

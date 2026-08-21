@@ -9,9 +9,11 @@ import type {CustomerData} from '~/root';
 import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
 import {Header, HeaderMenu} from '~/components/Header';
-import {CartMain} from '~/components/CartMain';
-import {B2BLocationProvider} from '~/components/B2BLocationProvider';
-import {B2BLocationSelector} from '~/components/B2BLocationSelector';
+import {CartMain} from '~/components/Cart';
+import {
+  B2BLocationProvider,
+  B2BLocationSelector,
+} from '~/components/Account/Location';
 import {
   SEARCH_ENDPOINT,
   SearchFormPredictive,

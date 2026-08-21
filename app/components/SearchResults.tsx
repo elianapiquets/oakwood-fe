@@ -1,6 +1,5 @@
-import {ProductsTable} from '~/components/ProductsTable';
 import type {BackendProduct} from '~/lib/backend';
-import type {ProductListItem} from '~/components/ProductListRow';
+import {ProductsTable, type ProductListItem} from '~/components/product';
 
 function backendToListItem(p: BackendProduct): ProductListItem {
   return {

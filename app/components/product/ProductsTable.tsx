@@ -1,4 +1,4 @@
-import {ProductListRow, type ProductListItem} from '~/components/ProductListRow';
+import {ProductListRow, type ProductListItem} from './ProductListRow';
 
 export function ProductsTable({nodes}: {nodes: ProductListItem[]}) {
   return (
