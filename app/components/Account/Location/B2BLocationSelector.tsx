@@ -160,7 +160,7 @@ export function B2BLocationSelector() {
                   aria-busy={isPending}
                   className="flex w-full items-center justify-between gap-3 rounded px-2 py-3 text-left hover:bg-slate-50 disabled:cursor-default disabled:hover:bg-transparent"
                 >
-                  <span className="flex items-center gap-3">
+                  <span className="flex items-center gap-3 w-[90%]">
                     <span
                       className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
                         isSelected
@@ -170,23 +170,31 @@ export function B2BLocationSelector() {
                     >
                       <PinIcon />
                     </span>
-                    <span>
-                      <span className="block text-sm font-semibold text-slate-900">
-                        {location.name}
+                    <span
+                      className={
+                        'grid grid-cols-[50%_auto] w-full gap-2 justify-start items-center'
+                      }
+                    >
+                      <span className={'flex flex-col items-start'}>
+                        <span className="block text-sm font-semibold text-slate-900">
+                          {location.name}
+                        </span>
+                        {location.role ? (
+                          <span className="block text-xs text-blue-700">
+                            {location.role}
+                          </span>
+                        ) : null}
                       </span>
-                      {location.role ? (
-                        <span className="block text-xs text-blue-700">
-                          {location.role}
-                        </span>
-                      ) : null}
-                      {location.address.map((line) => (
-                        <span
-                          key={line}
-                          className="block text-xs text-slate-500"
-                        >
-                          {line}
-                        </span>
-                      ))}
+                      <span className={'flex flex-col items-start'}>
+                        {location.address.map((line) => (
+                          <span
+                            key={line}
+                            className="block text-xs text-slate-500"
+                          >
+                            {line}
+                          </span>
+                        ))}
+                      </span>
                     </span>
                   </span>
                   {isPending ? (

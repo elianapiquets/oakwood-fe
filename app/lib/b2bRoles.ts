@@ -40,3 +40,50 @@ export function roleCanViewAllLocationOrders(
     ),
   );
 }
+
+/**
+ * Operations that amount to "may change this resource".
+ *
+ * `ADD` is absent on purpose: being able to add a contact isn't permission to
+ * edit the location's addresses, and the two are separate resources anyway.
+ */
+export const ROLE_EDIT_PERMISSIONS = [
+  'ALL',
+  'EDIT',
+] as const satisfies readonly PermittedOperation[];
+
+/** The two roles this store defines. Named here so no string is retyped. */
+export const LOCATION_ADMIN_ROLE = 'Location admin';
+export const ORDERING_ONLY_ROLE = 'Ordering only';
+
+/**
+ * Whether a role may edit a resource at its location.
+ *
+ * Takes two signals, because neither alone is sufficient here:
+ *
+ * 1. `resourcePermission(resource: …)`, the model Shopify documents. Preferred,
+ *    and the only thing `roleCanViewAllLocationOrders` uses — for ORDER it does
+ *    discriminate ("Location admin" returns `['VIEW','ADD']`, "Ordering only"
+ *    `[]`).
+ * 2. The role's **name**. Needed because these location resources return no
+ *    edit operation at all for a Location admin on this store, so relying on
+ *    permissions alone hides the controls from the very people who should have
+ *    them. Oakwood defines exactly two roles, and admin means editable.
+ *
+ * The name check fails *closed*: rename the role in Admin and admins lose the
+ * controls rather than gaining them. Revisit if Shopify starts populating edit
+ * operations for these resources, or if the company grows a third role.
+ */
+export function roleCanEdit(
+  permissions: readonly PermittedOperation[] | null | undefined,
+  roleName?: string | null,
+): boolean {
+  if (roleName === LOCATION_ADMIN_ROLE) return true;
+
+  if (!permissions?.length) return false;
+  return permissions.some((permission) =>
+    (ROLE_EDIT_PERMISSIONS as readonly PermittedOperation[]).includes(
+      permission,
+    ),
+  );
+}

@@ -297,3 +297,51 @@ export async function createCompanyLocation(
     };
   }
 }
+
+export type CompanyAddressType = 'BILLING' | 'SHIPPING';
+
+/**
+ * Sets a location's shipping and/or billing address.
+ *
+ * The only route to it: `CompanyLocationUpdateInput` carries no address fields,
+ * so this is `companyLocationAssignAddress` behind the backend.
+ *
+ * Like `createCompanyLocation`, failures are returned rather than swallowed —
+ * a rejected address (a zip that doesn't match its province, say) has to reach
+ * the form.
+ */
+export async function assignCompanyLocationAddress(
+  locationId: string,
+  address: CreateCompanyLocationAddress,
+  addressTypes: CompanyAddressType[],
+): Promise<{ok: true} | {ok: false; error: string}> {
+  try {
+    const response = await fetch(
+      `${BACKEND_URL}/api/company-locations/${encodeURIComponent(locationId)}/address`,
+      {
+        method: 'POST',
+        headers: {...BACKEND_HEADERS, 'Content-Type': 'application/json'},
+        body: JSON.stringify({address, addressTypes}),
+      },
+    );
+
+    const payload = (await response.json().catch(() => null)) as
+      | {ok?: boolean; error?: string}
+      | null;
+
+    if (!response.ok || !payload?.ok) {
+      return {
+        ok: false,
+        error: payload?.error ?? `Backend responded ${response.status}`,
+      };
+    }
+
+    return {ok: true};
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error ? error.message : 'Could not reach the backend',
+    };
+  }
+}
