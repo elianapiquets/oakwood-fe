@@ -3,9 +3,26 @@ import { Input as InputPrimitive } from "@base-ui/react/input"
 
 import { cn } from "~/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+/*
+ * Wrapped in `forwardRef`, unlike the file shadcn generates.
+ *
+ * shadcn targets React 19, where `ref` is an ordinary prop and a plain function
+ * component receives it in `...props`. This project is on React 18.3, where
+ * React strips `ref` before props — so the generated version silently drops it.
+ * react-hook-form's `register()` needs that ref to read the field at submit;
+ * without it an untouched field resolves to `undefined` rather than its default,
+ * and zod rejects it with "expected string, received undefined".
+ *
+ * Re-apply this when regenerating the component, until the project is on React 19.
+ */
+
+const Input = React.forwardRef<
+  HTMLInputElement,
+  React.ComponentProps<"input">
+>(function Input({ className, type, ...props }, ref) {
   return (
     <InputPrimitive
+      ref={ref as React.Ref<HTMLElement>}
       type={type}
       data-slot="input"
       className={cn(
@@ -15,6 +32,6 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       {...props}
     />
   )
-}
+})
 
 export { Input }

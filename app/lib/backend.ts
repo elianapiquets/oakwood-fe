@@ -190,3 +190,115 @@ export async function fetchCompanyLocationBilling(
     )
     .catch(() => null);
 }
+
+export type BackendPaymentTermsTemplate = {
+  id: string;
+  name: string;
+  dueInDays: number | null;
+  paymentTermsType: string | null;
+};
+
+/**
+ * `companyLocationCreate` needs a real `PaymentTermsTemplate` gid, so the
+ * dropdown options can't be hardcoded. Falls back to an empty list, which the
+ * form renders as "No payment terms" only.
+ */
+export async function fetchPaymentTermsTemplates(): Promise<
+  BackendPaymentTermsTemplate[]
+> {
+  return fetch(`${BACKEND_URL}/api/payment-terms-templates`, {
+    headers: BACKEND_HEADERS,
+  })
+    .then((r) =>
+      r.ok ? (r.json() as Promise<BackendPaymentTermsTemplate[]>) : [],
+    )
+    .catch(() => []);
+}
+
+export type CreateCompanyLocationAddress = {
+  address1?: string;
+  address2?: string;
+  city?: string;
+  zoneCode?: string;
+  zip?: string;
+  /** A `CountryCode` enum value, e.g. 'US'. */
+  countryCode?: string;
+  recipient?: string;
+  phone?: string;
+};
+
+export type CreateCompanyLocationBody = {
+  name: string;
+  externalId?: string;
+  /**
+   * Company contact to grant `Location admin` at the new location. A location
+   * with no contacts is invisible to the customer who created it — the account
+   * pages authorize against the customer's own `companyContacts.locations`.
+   */
+  assignContactId?: string;
+  /** Required in practice, despite being optional on `CompanyLocationInput`. */
+  shippingAddress?: CreateCompanyLocationAddress;
+  taxRegistrationId?: string;
+  taxExempt?: boolean;
+  billingSameAsShipping?: boolean;
+  buyerExperienceConfiguration?: {
+    paymentTermsTemplateId?: string;
+    checkoutToDraft?: boolean;
+    editableShippingAddress?: boolean;
+  };
+};
+
+export type CreateCompanyLocationResult =
+  | {ok: true; location: {id: string; name: string}}
+  | {ok: false; error: string};
+
+/**
+ * Unlike the read helpers above, this never collapses a failure into a nullish
+ * value: a creation that didn't happen has to be distinguishable from one that
+ * did, or the form would redirect as though it had worked.
+ *
+ * `companyId` comes from the signed-in customer's session, never from a form —
+ * the backend's shared api key can't tell customers apart, so the storefront
+ * route is what confines a customer to their own company.
+ */
+export async function createCompanyLocation(
+  companyId: string,
+  body: CreateCompanyLocationBody,
+): Promise<CreateCompanyLocationResult> {
+  try {
+    const response = await fetch(
+      `${BACKEND_URL}/api/companies/${encodeURIComponent(companyId)}/locations`,
+      {
+        method: 'POST',
+        headers: {...BACKEND_HEADERS, 'Content-Type': 'application/json'},
+        body: JSON.stringify(body),
+      },
+    );
+
+    const payload = (await response.json().catch(() => null)) as
+      | {id?: string; name?: string; error?: string}
+      | null;
+
+    if (!response.ok || !payload?.id) {
+      // TEMP diagnostic — remove once the create path is confirmed.
+      console.log(
+        '[create-location] 4b. backend response',
+        response.status,
+        JSON.stringify(payload),
+      );
+
+      return {
+        ok: false,
+        error: payload?.error ?? `Backend responded ${response.status}`,
+      };
+    }
+
+    return {ok: true, location: {id: payload.id, name: payload.name ?? ''}};
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error ? error.message : 'Could not reach the backend',
+    };
+  }
+}

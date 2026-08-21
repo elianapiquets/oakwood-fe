@@ -103,7 +103,15 @@ export default function CompanyPage() {
         title="Locations"
         count={locations.length}
         className="mt-6"
-        action={<AdminOnlyAction label="+ Add Location" />}
+        action={
+          <Link
+            to="/account/company/create-location"
+            prefetch="intent"
+            className="rounded bg-navy px-3 py-1.5 text-sm font-semibold text-white no-underline hover:opacity-90"
+          >
+            + Add Location
+          </Link>
+        }
       >
         <ul className="divide-y divide-slate-100">
           {locations.map((location) => (
