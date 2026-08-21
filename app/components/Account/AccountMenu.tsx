@@ -1,10 +1,6 @@
 import {useState} from 'react';
 import {Form, NavLink} from 'react-router';
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from '~/components/ui/Popover/Popover';
+import {Popover, PopoverTrigger, PopoverContent} from '~/components/ui';
 import type {CustomerCompanyLocation} from '~/root';
 import {useB2BLocation} from '~/components/B2BLocationProvider';
 import {BriefcaseIcon, PinIcon} from './icons';

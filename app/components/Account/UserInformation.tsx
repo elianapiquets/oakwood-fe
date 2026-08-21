@@ -4,7 +4,7 @@ import {useForm, type SubmitHandler} from 'react-hook-form';
 import {useFetcher} from 'react-router';
 import {ConfigProvider} from 'antd';
 
-import {Form, createHandledFormElement} from '~/components/ui/Form';
+import {Form, createHandledFormElement} from '~/components/ui';
 import {BASE_FORM_CONFIG} from '~/lib/form';
 import {
   userSchema,

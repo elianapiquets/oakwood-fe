@@ -1,6 +1,6 @@
 import {Link} from 'react-router';
-import {tabsListVariants} from '~/components/ui/Tabs';
-import {cn} from '~/components/ui/cn';
+import {tabsListVariants} from '~/components/ui';
+import {cn} from '@/lib/utils';
 import {locationIdToParam, ORDER_FILTER_FIELDS} from '~/lib/orderFilters';
 
 export interface OrdersTabLocation {

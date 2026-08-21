@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '~/components/ui/Dialog/Dialog';
+} from '~/components/ui';
 import {useB2BLocation} from '~/components/B2BLocationProvider';
 import {BriefcaseIcon, PinIcon, CheckIcon} from '~/components/Account/icons';
 

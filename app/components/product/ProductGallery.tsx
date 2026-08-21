@@ -6,7 +6,7 @@ import {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
-} from '~/components/ui/Carousel/Carousel';
+} from '~/components/ui';
 
 type ProductGalleryImage = {
   id: string;

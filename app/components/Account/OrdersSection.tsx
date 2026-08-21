@@ -23,9 +23,10 @@ interface OrdersSectionProps {
  * are the same components in every case, with the location applied server-side
  * as an order-query filter.
  *
- * Uses Hydrogen's <Pagination> directly rather than
- * <PaginatedResourceSection>, which renders one element per node and so can't
- * produce a single <table>/<tbody>. The pager builds plain links from
+ * Uses Hydrogen's <Pagination> directly rather than the skeleton's
+ * `PaginatedResourceSection` helper, which renders one element per node and so
+ * can't produce a single <table>/<tbody> — that helper was unused and has been
+ * removed from this repo. The pager builds plain links from
  * `previousPageUrl`/`nextPageUrl` instead of Hydrogen's `PreviousLink`/
  * `NextLink`, because those carry the state that makes pages accumulate; those
  * URLs derive from the current search params, so the tab, search and filter

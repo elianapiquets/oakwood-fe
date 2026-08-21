@@ -44,6 +44,7 @@ export default defineConfig(({mode}) => {
          * @see https://vitejs.dev/config/dep-optimization-options
          */
         include: [
+          'antd/lib/input',
           'copy-to-clipboard',
           'json2mq',
           'rc-picker/es/generate/dayjs',

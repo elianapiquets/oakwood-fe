@@ -32,7 +32,8 @@
       "vite/client"
     ],
     "paths": {
-      "~/*": ["app/*"]
+      "~/*": ["app/*"],
+      "@/*": ["app/*"]
     },
     "noEmit": true,
     "rootDirs": [".", "./.react-router/types"],

@@ -3,7 +3,7 @@ import {
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
-} from '~/components/ui/Accordion/Accordion';
+} from '~/components/ui';
 import {ProductDescription} from './ProductDescription';
 import {ProductPhysicalProperties} from './ProductPhysicalProperties';
 import {
@@ -71,7 +71,9 @@ export function ProductDetailsSection({
           Certificate of Analysis (CofA)
         </AccordionTrigger>
         <AccordionContent>
-          <ProductCertificatesOfAnalysis certificates={certificatesOfAnalysis} />
+          <ProductCertificatesOfAnalysis
+            certificates={certificatesOfAnalysis}
+          />
         </AccordionContent>
       </AccordionItem>
 
