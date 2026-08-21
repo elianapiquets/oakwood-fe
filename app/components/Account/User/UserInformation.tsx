@@ -176,22 +176,23 @@ function UserInformation({customer}: UserInformationProps) {
       )}
       <Form
         key="info"
+        methods={methodsUser}
         onSubmit={(event) =>
           void methodsUser.handleSubmit(onSubmitUser)(event)
         }
         className="w-full grid grid-cols-2 gap-x-6 gap-y-4 mt-6"
       >
-        <Form.Item methods={methodsUser} name="firstName">
+        <Form.Item name="firstName">
           <Form.Input placeholder="FIRST NAME" disabled={!isEditingUser} />
           <Form.Error />
         </Form.Item>
 
-        <Form.Item methods={methodsUser} name="lastName">
+        <Form.Item name="lastName">
           <Form.Input placeholder="LAST NAME" disabled={!isEditingUser} />
           <Form.Error />
         </Form.Item>
 
-        <Form.Item methods={methodsUser} name="address1">
+        <Form.Item name="address1">
           <Form.Input
             placeholder="ADDRESS LINE 1"
             disabled={!isEditingUser}
@@ -199,7 +200,7 @@ function UserInformation({customer}: UserInformationProps) {
           <Form.Error />
         </Form.Item>
 
-        <Form.Item methods={methodsUser} name="address2">
+        <Form.Item name="address2">
           <Form.Input
             placeholder="APT, SUITE, ETC."
             disabled={!isEditingUser}
@@ -207,12 +208,12 @@ function UserInformation({customer}: UserInformationProps) {
           <Form.Error />
         </Form.Item>
 
-        <Form.Item methods={methodsUser} name="city">
+        <Form.Item name="city">
           <Form.Input placeholder="CITY" disabled={!isEditingUser} />
           <Form.Error />
         </Form.Item>
 
-        <Form.Item methods={methodsUser} name="zoneCode">
+        <Form.Item name="zoneCode">
           <Form.Select
             placeholder="STATE"
             options={US_STATE_OPTIONS}
@@ -221,7 +222,7 @@ function UserInformation({customer}: UserInformationProps) {
           <Form.Error />
         </Form.Item>
 
-        <Form.Item methods={methodsUser} name="territoryCode">
+        <Form.Item name="territoryCode">
           <Form.Select
             placeholder="COUNTRY"
             options={COUNTRY_OPTIONS}
@@ -230,7 +231,7 @@ function UserInformation({customer}: UserInformationProps) {
           <Form.Error />
         </Form.Item>
 
-        <Form.Item methods={methodsUser} name="zip">
+        <Form.Item name="zip">
           <Form.Input placeholder="POSTAL CODE" disabled={!isEditingUser} />
           <Form.Error />
         </Form.Item>

@@ -1,4 +1,5 @@
 import type {FieldValues, UseFormReturn, Path} from 'react-hook-form';
+import {FormProvider, useFormContext} from 'react-hook-form';
 
 import type {ReactNode} from 'react';
 import React from 'react';
@@ -33,7 +34,11 @@ type ItemProps<TFieldValues extends FieldValues> = {
   children?: ReactNode;
   className?: string;
   name: Path<TFieldValues>;
-  methods: UseFormReturn<TFieldValues>;
+  /**
+   * Optional: inherited from the enclosing `<Form methods={…}>`. Pass it here
+   * only to bind a field to a different form than the one it sits inside.
+   */
+  methods?: UseFormReturn<TFieldValues>;
 };
 
 type LabelProps = {
@@ -46,13 +51,14 @@ type LabelProps = {
   className?: string;
 };
 
-/**
- * No `methods`: each `Form.Item` carries its own, so the form element itself
- * needs nothing but a submit handler.
- */
-type FormProps = {
+type FormProps<TFieldValues extends FieldValues> = {
   children?: ReactNode;
   className?: string;
+  /**
+   * Supplied once here and shared with every `Form.Item` inside, through rhf's
+   * `FormProvider`. Optional, for a `<Form>` that holds no fields.
+   */
+  methods?: UseFormReturn<TFieldValues>;
   onSubmit?: (event?: React.FormEvent<HTMLFormElement>) => void;
   as?: React.ElementType;
 };
@@ -63,7 +69,9 @@ type DivProps = {
   className?: string;
 };
 
-const Error = ({className, errormessage}: ErrorProps) => {
+/** Named `FieldError`, not `Error`: the latter shadows the global constructor
+ *  for this whole module, so `new Error(...)` would resolve to a component. */
+const FieldError = ({className, errormessage}: ErrorProps) => {
   if (!errormessage) return <></>;
 
   return (
@@ -74,27 +82,43 @@ const Error = ({className, errormessage}: ErrorProps) => {
 };
 
 /**
- * One field. Owns the `name` and the `methods` and hands both to
- * `FormController`, which opens a single rhf `Controller` and injects the field
- * state into whichever children want it — control, label, error message.
+ * One field. Takes the `name` and hands it, with the form methods, to
+ * `FormController` — which opens a single rhf `Controller` and injects the field
+ * state into whichever children want it: control, label, error message.
+ *
+ * The methods come from the enclosing `<Form>` via rhf's own `FormProvider`, so
+ * they don't have to be repeated on every field.
  */
 const Item = <TFieldValues extends FieldValues>({
   children,
   className,
   name,
   methods,
-}: ItemProps<TFieldValues>) => (
-  <div
-    className={clsx(
-      className,
-      !className && 'flex flex-col items-start gap-2 text-sm w-full',
-    )}
-  >
-    <FormController methods={methods} name={name}>
-      {children}
-    </FormController>
-  </div>
-);
+}: ItemProps<TFieldValues>) => {
+  // Called unconditionally — hooks can't be. Returns null outside a provider,
+  // which is why an explicit `methods` prop still wins.
+  const inherited = useFormContext<TFieldValues>();
+  const form = methods ?? inherited;
+
+  if (!form) {
+    throw new Error(
+      'Form.Item has no form methods: pass `methods` to the enclosing <Form>, or to this Item directly.',
+    );
+  }
+
+  return (
+    <div
+      className={clsx(
+        className,
+        !className && 'flex flex-col items-start gap-2 text-sm w-full',
+      )}
+    >
+      <FormController methods={form} name={name}>
+        {children}
+      </FormController>
+    </div>
+  );
+};
 
 Item.displayName = 'Item';
 
@@ -389,20 +413,31 @@ const RadioGroup = ({
   </div>
 );
 
-const Form = ({
+const Form = <TFieldValues extends FieldValues>({
   children,
   className,
+  methods,
   onSubmit,
   as: Component = 'form',
-}: FormProps) => (
-  <Component
-    className={clsx(className, !className && 'flex flex-col w-full gap-3')}
-    onSubmit={onSubmit}
-  >
-    {children}
-    {Boolean(onSubmit) && <input type={'submit'} hidden />}
-  </Component>
-);
+}: FormProps<TFieldValues>) => {
+  const element = (
+    <Component
+      className={clsx(className, !className && 'flex flex-col w-full gap-3')}
+      onSubmit={onSubmit}
+    >
+      {children}
+      {Boolean(onSubmit) && <input type={'submit'} hidden />}
+    </Component>
+  );
+
+  // rhf's own provider rather than a bespoke context: `useFormContext` then
+  // works for anything nested, not just `Form.Item`.
+  return methods ? (
+    <FormProvider {...methods}>{element}</FormProvider>
+  ) : (
+    element
+  );
+};
 
 Form.Item = Item;
 
@@ -419,7 +454,7 @@ Form.Checkbox = Checkbox;
 Form.RadioGroup = RadioGroup;
 
 
-Form.Error = Error;
+Form.Error = FieldError;
 
 
 export {Form};

@@ -68,7 +68,10 @@ export function CreateLocationForm({
   };
 
   return (
-    <Form onSubmit={(event) => void methods.handleSubmit(onSubmit)(event)}>
+    <Form
+      methods={methods}
+      onSubmit={(event) => void methods.handleSubmit(onSubmit)(event)}
+    >
       <div>
           {serverError ? (
             <p
@@ -96,7 +99,7 @@ export function CreateLocationForm({
       <CompanyCard title="Location details" className="mt-6">
         <div className="flex flex-col gap-4 px-4 py-4">
           <div className="flex flex-col gap-1.5">
-            <Form.Item methods={methods} name="name">
+            <Form.Item name="name">
               <Form.Label label="Location name" colon={false} required />
               <Form.Input id="name" placeholder="Midtown" />
               <Form.Error />
@@ -107,7 +110,7 @@ export function CreateLocationForm({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Form.Item methods={methods} name="externalId">
+            <Form.Item name="externalId">
               <Form.Label label="Location ID" colon={false} />
               <Form.Input id="externalId" />
               <Form.Error />
@@ -130,7 +133,7 @@ export function CreateLocationForm({
 
       <CompanyCard title="Payment terms" className="mt-6">
         <div className="px-4 py-4">
-          <Form.Item methods={methods} name="paymentTermsTemplateId">
+          <Form.Item name="paymentTermsTemplateId">
             <Form.Select
               id="paymentTermsTemplateId"
               options={paymentTermsItems}
@@ -142,7 +145,7 @@ export function CreateLocationForm({
 
       <CompanyCard title="Checkout" className="mt-6">
         <div className="flex flex-col gap-5 px-4 py-4">
-          <Form.Item methods={methods} name="editableShippingAddress">
+          <Form.Item name="editableShippingAddress">
             <Form.Checkbox
               heading="Ship to address"
               label="Allow customers to ship to any one-time address"
@@ -150,7 +153,7 @@ export function CreateLocationForm({
             <Form.Error />
           </Form.Item>
 
-          <Form.Item methods={methods} name="orderSubmission">
+          <Form.Item name="orderSubmission">
             <Form.RadioGroup
               label="Order submission"
               options={ORDER_SUBMISSION_OPTIONS}
@@ -162,13 +165,13 @@ export function CreateLocationForm({
 
       <CompanyCard title="Tax details" className="mt-6">
         <div className="flex flex-col gap-4 px-4 py-4">
-          <Form.Item methods={methods} name="taxRegistrationId">
+          <Form.Item name="taxRegistrationId">
             <Form.Label label="Tax ID" colon={false} />
             <Form.Input id="taxRegistrationId" />
             <Form.Error />
           </Form.Item>
 
-          <Form.Item methods={methods} name="taxSetting">
+          <Form.Item name="taxSetting">
             <Form.Label label="Tax settings" colon={false} />
             <Form.Select id="taxSetting" options={TAX_SETTING_OPTIONS} />
             <Form.Error />
