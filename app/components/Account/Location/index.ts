@@ -3,3 +3,4 @@ export * from './B2BLocationSelector';
 export * from './constants';
 export * from './CreateLocationForm';
 export * from './LocationAddressCard';
+export * from './LocationTaxCard';

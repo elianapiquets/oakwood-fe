@@ -6,18 +6,20 @@ import {getPathPrefix} from '~/lib/i18n';
 import {
   assignCompanyLocationAddress,
   fetchCompanyLocationBilling,
+  updateCompanyLocationTax,
 } from '~/lib/backend';
 import {locationIdToParam, locationParamToGid} from '~/lib/orderFilters';
 import {roleCanEdit} from '~/lib/b2bRoles';
 import {
-  AdminOnlyAction,
   CompanyBreadcrumb,
   CompanyCard,
-  FieldLabel,
   InitialsBadge,
 } from '~/components/Account/company/CompanyCard';
 import {LOCATION_QUERY} from '~/graphql/customer-account/CompanyLocationQuery';
-import {LocationAddressCard} from '~/components/Account/Location';
+import {
+  LocationAddressCard,
+  LocationTaxCard,
+} from '~/components/Account/Location';
 import {
   addressSchema,
   toAddressInput,
@@ -143,8 +145,42 @@ export async function action({context, params, request}: Route.ActionArgs) {
   }
 
   const formData = await request.formData();
+  const intent = formData.get('intent');
 
-  if (formData.get('intent') !== 'address') {
+  const permissions = locationPermissions(
+    contact?.id ?? null,
+    data?.companyLocation?.roleAssignments?.nodes ?? [],
+  );
+
+  if (intent === 'tax') {
+    // Hiding the control is presentation; this is the check that counts.
+    if (!permissions.location) {
+      return {error: 'You do not have permission to change tax details.'};
+    }
+
+    const taxSetting = formData.get('taxSetting');
+
+    const taxRegistrationId = String(
+      formData.get('taxRegistrationId') ?? '',
+    ).trim();
+
+    const result = await updateCompanyLocationTax(
+      locationIdToParam(locationId),
+      {
+        // Empty clears the id rather than storing a blank string.
+        taxRegistrationId: taxRegistrationId || null,
+        // The whole setting is one boolean on Shopify's side, which is why
+        // the UI offers two choices rather than the admin's three.
+        taxExempt: taxSetting === 'NO_COLLECT',
+      },
+    );
+
+    if (!result.ok) return {error: result.error};
+
+    return {ok: true};
+  }
+
+  if (intent !== 'address') {
     return {error: 'Unsupported action'};
   }
 
@@ -155,10 +191,6 @@ export async function action({context, params, request}: Route.ActionArgs) {
 
   // Hiding the button is presentation; this is the actual control. A contact
   // without edit permission at this location can still post to this action.
-  const permissions = locationPermissions(
-    contact?.id ?? null,
-    data?.companyLocation?.roleAssignments?.nodes ?? [],
-  );
   const allowed =
     addressType === 'SHIPPING'
       ? permissions.shippingAddress
@@ -305,14 +337,6 @@ export async function loader({context, params}: Route.LoaderArgs) {
     url: `${getPathPrefix(storefront)}/account/company/${locationIdToParam(location.id)}`,
   };
 
-  // TEMP diagnostic — remove once the permission gate is confirmed.
-  console.warn(
-    '[location perms] viewerContactId=' +
-      String(contact?.id) +
-      ' roleAssignments=' +
-      JSON.stringify(location.roleAssignments?.nodes ?? []),
-  );
-
   return {
     location,
     shippingAddress: toAddressValues(location.shippingAddress),
@@ -388,47 +412,16 @@ export default function CompanyLocationPage() {
           canEdit={permissions.billingAddress}
         />
 
-        <CompanyCard
-          title="Tax Details"
-          action={
-            permissions.location ? (
-              <AdminOnlyAction label="Edit" variant="link" />
-            ) : null
-          }
-        >
-          <dl className="px-4 py-4 text-sm text-slate-700">
-            <FieldLabel>Tax ID / EIN</FieldLabel>
-            <dd className="mt-1 font-mono">{tax.taxId ?? '—'}</dd>
-            {billingUnavailable ? (
-              <dd className="mt-2 text-xs text-slate-400">
-                Tax-exempt status needs the backend, which is unreachable.
-              </dd>
-            ) : null}
-            {tax.taxExempt === null ? null : (
-              <dd className="mt-3 flex items-center gap-2">
-                <span
-                  aria-hidden="true"
-                  className={`flex h-4 w-4 items-center justify-center rounded text-[0.6rem] font-bold text-white ${
-                    tax.taxExempt ? 'bg-emerald-500' : 'bg-slate-300'
-                  }`}
-                >
-                  {tax.taxExempt ? '✓' : ''}
-                </span>
-                <span className="text-sm">
-                  {tax.taxExempt ? 'Tax exempt' : 'Not tax exempt'}
-                </span>
-              </dd>
-            )}
-          </dl>
-        </CompanyCard>
+        <LocationTaxCard
+          taxId={tax.taxId ?? null}
+          taxExempt={tax.taxExempt ?? null}
+          canEdit={permissions.location}
+          unavailable={billingUnavailable}
+        />
 
         <CompanyCard
           title="Payment Terms"
-          action={
-            permissions.location ? (
-              <AdminOnlyAction label="Edit" variant="link" />
-            ) : null
-          }
+
         >
           <div className="flex items-start gap-3 px-4 py-4 text-sm text-slate-700">
             {paymentTerms ? (
@@ -461,13 +454,7 @@ export default function CompanyLocationPage() {
         </CompanyCard>
         <CompanyCard
           title="Payment Methods"
-          action={
-            /* PAYMENT_METHOD is its own ResourceType; until it's fetched this
-               follows the location permission, which a location admin has. */
-            permissions.location ? (
-              <AdminOnlyAction label="+ Add" variant="link" />
-            ) : null
-          }
+
         >
           {paymentMethods.length ? (
             <ul className="divide-y divide-slate-100">
@@ -517,11 +504,7 @@ export default function CompanyLocationPage() {
         title="Customers"
         count={contacts.length}
         className="mt-6"
-        action={
-          permissions.contacts ? (
-            <AdminOnlyAction label="+ Add Customer" />
-          ) : null
-        }
+
       >
         <table className="w-full text-left">
           <thead>
@@ -565,9 +548,7 @@ export default function CompanyLocationPage() {
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {permissions.contactRoles ? (
-                        <AdminOnlyAction label="Change Role" variant="link" />
-                      ) : null}
+                  
                 </td>
               </tr>
             ))}

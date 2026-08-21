@@ -43,6 +43,7 @@ export function LocationAddressCard({
   const fetcher = useFetcher<{error?: string}>();
 
   const isSaving = fetcher.state !== 'idle';
+
   const error = !isSaving ? (fetcher.data?.error ?? null) : null;
 
   function save(next: AddressValues) {
@@ -65,12 +66,12 @@ export function LocationAddressCard({
             <button
               type="button"
               onClick={() => setOpen(true)}
-              disabled={isSaving}
+              // disabled={isSaving}
               className="text-sm text-navy underline disabled:text-slate-400"
             >
               {isSaving ? 'Saving…' : address ? 'Edit' : 'Add'}
             </button>
-          ) : null
+          ) : <></>
         }
       >
         <div className="px-4 py-4 text-sm text-slate-700">

@@ -345,3 +345,45 @@ export async function assignCompanyLocationAddress(
     };
   }
 }
+
+/**
+ * Sets a location's tax registration id and tax-exempt flag.
+ *
+ * `companyLocationUpdate` has no tax fields, so this is
+ * `companyLocationTaxSettingsUpdate` behind the backend. Failures are returned,
+ * not swallowed.
+ */
+export async function updateCompanyLocationTax(
+  locationId: string,
+  settings: {taxRegistrationId?: string | null; taxExempt?: boolean},
+): Promise<{ok: true} | {ok: false; error: string}> {
+  try {
+    const response = await fetch(
+      `${BACKEND_URL}/api/company-locations/${encodeURIComponent(locationId)}/tax`,
+      {
+        method: 'POST',
+        headers: {...BACKEND_HEADERS, 'Content-Type': 'application/json'},
+        body: JSON.stringify(settings),
+      },
+    );
+
+    const payload = (await response.json().catch(() => null)) as
+      | {ok?: boolean; error?: string}
+      | null;
+
+    if (!response.ok || !payload?.ok) {
+      return {
+        ok: false,
+        error: payload?.error ?? `Backend responded ${response.status}`,
+      };
+    }
+
+    return {ok: true};
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error ? error.message : 'Could not reach the backend',
+    };
+  }
+}

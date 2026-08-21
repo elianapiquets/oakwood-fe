@@ -5,7 +5,6 @@ import {getRootSeo} from '~/lib/seo';
 import {getPathPrefix} from '~/lib/i18n';
 import {locationIdToParam} from '~/lib/orderFilters';
 import {
-  AdminOnlyAction,
   CompanyBreadcrumb,
   CompanyCard,
   InitialsBadge,
@@ -82,10 +81,7 @@ export default function CompanyPage() {
         {company.name}
       </h1>
 
-      <CompanyCard
-        title="Display Name"
-        action={<AdminOnlyAction label="Edit" variant="secondary" />}
-      >
+      <CompanyCard title="Display Name">
         <div className="flex items-center gap-3 px-4 py-4">
           <InitialsBadge value={company.name} />
           <div>

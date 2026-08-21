@@ -10,16 +10,22 @@ export const NO_PAYMENT_TERMS = 'NONE';
 
 /**
  * Shopify's admin offers three tax choices, but `CompanyLocationTaxSettings` is
- * only `{taxExempt, taxExemptions, taxRegistrationId}` — there is no enum or
- * server-side record behind them, unlike payment terms. So this list is local.
+ * only `{taxExempt, taxExemptions, taxRegistrationId}` — no enum, no
+ * server-side record, unlike payment terms. So this list is local, and it has
+ * to fit what can actually be stored.
  *
- * `COLLECT_UNLESS_EXEMPT` needs a `taxExemptions: [TaxExemption!]` list to mean
- * anything, and this form doesn't collect one yet, so it currently behaves the
- * same as `COLLECT`. It's offered because the admin offers it.
+ * The admin's middle option, "Collect tax unless exemptions apply", is
+ * deliberately **not** here. It's `taxExempt: false` plus a non-empty
+ * `taxExemptions` array; with nothing collecting exemptions it stores
+ * identically to "Collect tax" — so choosing it saved fine and then read back
+ * as "Collect tax", looking for all the world like a selection that didn't
+ * stick. Two options that round-trip truthfully beat three where one lies.
+ *
+ * Add it back together with an exemptions picker (the `TaxExemption` enum), not
+ * before.
  */
 export const TAX_SETTING_OPTIONS = [
   {value: 'COLLECT', label: 'Collect tax'},
-  {value: 'COLLECT_UNLESS_EXEMPT', label: 'Collect tax unless exemptions apply'},
   {value: 'NO_COLLECT', label: "Don't collect tax"},
 ] as const;
 
@@ -45,7 +51,7 @@ export const createLocationSchema = z.object({
   editableShippingAddress: z.boolean(),
   orderSubmission: z.enum(['AUTOMATIC', 'DRAFT']),
   taxRegistrationId: z.string().trim(),
-  taxSetting: z.enum(['COLLECT', 'COLLECT_UNLESS_EXEMPT', 'NO_COLLECT']),
+  taxSetting: z.enum(['COLLECT', 'NO_COLLECT']),
 });
 
 export type CreateLocationValues = z.infer<typeof createLocationSchema>;
