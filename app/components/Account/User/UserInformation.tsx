@@ -2,7 +2,6 @@ import {useState, useEffect} from 'react';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {useForm, type SubmitHandler} from 'react-hook-form';
 import {useFetcher} from 'react-router';
-import {ConfigProvider} from 'antd';
 
 import {Form, createHandledFormElement} from '~/components/ui';
 import {BASE_FORM_CONFIG} from '~/lib/form';
@@ -149,120 +148,118 @@ function UserInformation({customer}: UserInformationProps) {
   };
 
   return (
-    <ConfigProvider theme={{token: {fontFamily: 'Outfit, sans-serif'}}}>
-      <div className="border border-gray-200 rounded-lg p-6  gap-x-6 gap-y-4 w-full">
-        <div className="col-span-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-[#1e3a5f] font-bold text-base">
-              User Information
-            </h2>
-            {isEditingUser && (
-              <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full">
-                editing
-              </span>
-            )}
-          </div>
-          <SectionButtons
-            isEditing={isEditingUser}
-            isPending={isPending}
-            onEdit={() => setIsEditingUser(true)}
-            onCancel={() => {
-              methodsUser.reset();
-              setIsEditingUser(false);
-            }}
-            onSave={() => void methodsUser.handleSubmit(onSubmitUser)()}
+    <div className="border border-gray-200 rounded-lg p-6  gap-x-6 gap-y-4 w-full">
+      <div className="col-span-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h2 className="text-[#1e3a5f] font-bold text-base">
+            User Information
+          </h2>
+          {isEditingUser && (
+            <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full">
+              editing
+            </span>
+          )}
+        </div>
+        <SectionButtons
+          isEditing={isEditingUser}
+          isPending={isPending}
+          onEdit={() => setIsEditingUser(true)}
+          onCancel={() => {
+            methodsUser.reset();
+            setIsEditingUser(false);
+          }}
+          onSave={() => void methodsUser.handleSubmit(onSubmitUser)()}
+        />
+      </div>
+      {isEditingUser && (
+        <div className="col-span-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 text-[#1e3a5f] text-sm">
+          {
+            'Please do not use characters such as ~ @ $ % & * ( ) . ! , [ ] or {} in address or name fields.'
+          }
+        </div>
+      )}
+      <Form
+        key="info"
+        methods={methodsUser}
+        onSubmit={(event) =>
+          void methodsUser.handleSubmit(onSubmitUser)(event)
+        }
+        className="w-full grid grid-cols-2 gap-x-6 gap-y-4 mt-6"
+      >
+        <UserFormItem name="firstName">
+          <Form.Input placeholder="FIRST NAME" disabled={!isEditingUser} />
+          <Form.Error />
+        </UserFormItem>
+
+        <UserFormItem name="lastName">
+          <Form.Input placeholder="LAST NAME" disabled={!isEditingUser} />
+          <Form.Error />
+        </UserFormItem>
+
+        <UserFormItem name="address1">
+          <Form.Input
+            placeholder="ADDRESS LINE 1"
+            disabled={!isEditingUser}
+          />
+          <Form.Error />
+        </UserFormItem>
+
+        <UserFormItem name="address2">
+          <Form.Input
+            placeholder="APT, SUITE, ETC."
+            disabled={!isEditingUser}
+          />
+          <Form.Error />
+        </UserFormItem>
+
+        <UserFormItem name="city">
+          <Form.Input placeholder="CITY" disabled={!isEditingUser} />
+          <Form.Error />
+        </UserFormItem>
+
+        <UserFormItem name="zoneCode">
+          <Form.Select
+            placeholder="STATE"
+            options={US_STATE_OPTIONS}
+            disabled={!isEditingUser}
+          />
+          <Form.Error />
+        </UserFormItem>
+
+        <UserFormItem name="territoryCode">
+          <Form.Select
+            placeholder="COUNTRY"
+            options={COUNTRY_OPTIONS}
+            disabled={!isEditingUser}
+          />
+          <Form.Error />
+        </UserFormItem>
+
+        <UserFormItem name="zip">
+          <Form.Input placeholder="POSTAL CODE" disabled={!isEditingUser} />
+          <Form.Error />
+        </UserFormItem>
+
+        <div className="col-span-2">
+          <Form.Input
+            placeholder="EMAIL ADDRESS"
+            value={email}
+            onChange={() => {}}
+            disabled
           />
         </div>
-        {isEditingUser && (
-          <div className="col-span-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 text-[#1e3a5f] text-sm">
-            {
-              'Please do not use characters such as ~ @ $ % & * ( ) . ! , [ ] or {} in address or name fields.'
-            }
-          </div>
-        )}
-        <Form
-          key="info"
-          methods={methodsUser}
-          onSubmit={(event) =>
-            void methodsUser.handleSubmit(onSubmitUser)(event)
-          }
-          className="w-full grid grid-cols-2 gap-x-6 gap-y-4 mt-6"
-        >
-          <UserFormItem name="firstName">
-            <Form.Input placeholder="FIRST NAME" disabled={!isEditingUser} />
-            <Form.Error />
-          </UserFormItem>
-
-          <UserFormItem name="lastName">
-            <Form.Input placeholder="LAST NAME" disabled={!isEditingUser} />
-            <Form.Error />
-          </UserFormItem>
-
-          <UserFormItem name="address1">
-            <Form.Input
-              placeholder="ADDRESS LINE 1"
-              disabled={!isEditingUser}
-            />
-            <Form.Error />
-          </UserFormItem>
-
-          <UserFormItem name="address2">
-            <Form.Input
-              placeholder="APT, SUITE, ETC."
-              disabled={!isEditingUser}
-            />
-            <Form.Error />
-          </UserFormItem>
-
-          <UserFormItem name="city">
-            <Form.Input placeholder="CITY" disabled={!isEditingUser} />
-            <Form.Error />
-          </UserFormItem>
-
-          <UserFormItem name="zoneCode">
-            <Form.Select
-              placeholder="STATE"
-              options={US_STATE_OPTIONS}
-              disabled={!isEditingUser}
-            />
-            <Form.Error />
-          </UserFormItem>
-
-          <UserFormItem name="territoryCode">
-            <Form.Select
-              placeholder="COUNTRY"
-              options={COUNTRY_OPTIONS}
-              disabled={!isEditingUser}
-            />
-            <Form.Error />
-          </UserFormItem>
-
-          <UserFormItem name="zip">
-            <Form.Input placeholder="POSTAL CODE" disabled={!isEditingUser} />
-            <Form.Error />
-          </UserFormItem>
-
-          <div className="col-span-2">
-            <Form.Input
-              placeholder="EMAIL ADDRESS"
-              value={email}
-              onChange={() => {}}
-              disabled
-            />
-          </div>
-        </Form>
-        {isEditingUser && (
-          <div className="col-span-2">
-            <button
-              type="button"
-              className="border border-gray-300 text-gray-700 text-sm px-4 py-2 rounded hover:bg-gray-50 transition-colors"
-            >
-              Change Password
-            </button>
-          </div>
-        )}
-      </div>
-    </ConfigProvider>
+      </Form>
+      {isEditingUser && (
+        <div className="col-span-2">
+          <button
+            type="button"
+            className="border border-gray-300 text-gray-700 text-sm px-4 py-2 rounded hover:bg-gray-50 transition-colors"
+          >
+            Change Password
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

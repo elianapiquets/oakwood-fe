@@ -6,12 +6,17 @@ import React, {Children, createElement, isValidElement, Fragment} from 'react';
 import {clsx} from 'clsx';
 
 import {FormController} from './controller';
-import {ErrorTextForm} from '../ErrorTextForm';
+import {ErrorTextForm} from './ErrorTextForm';
 import {Typography} from '../Typography';
 import {Input} from '../Input';
-import {MaskedInput} from '../MaskedInput';
-import {Select} from '../Select';
-import {TextArea} from '../TextArea';
+import {
+  Select as SelectRoot,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../Select';
+import {Textarea} from '../Textarea';
 
 type FooterProps = {
   children?: ReactNode;
@@ -157,6 +162,87 @@ const Label = ({
   </label>
 );
 
+type SelectOption = {label: string; value: string};
+
+type SelectProps<TFieldValues extends FieldValues> = {
+  name?: Path<TFieldValues>;
+  id?: string;
+  className?: string;
+  placeholder?: string;
+  options?: readonly SelectOption[];
+  disabled?: boolean;
+  value?: string;
+  onChange?: (value: string) => void;
+  onBlur?: React.FocusEventHandler<HTMLButtonElement>;
+  /** Injected by FormController from react-hook-form's error state. */
+  errormessage?: string;
+  /**
+   * Injected but always false — Form.Item destructures `errorMessage` while
+   * FormController writes `errormessage`. Accepted here only so it doesn't
+   * reach the DOM, where React would warn about an unknown camelCase prop.
+   */
+  hasError?: boolean;
+  /** Injected, and unusable: `value` below is controlled. */
+  defaultValue?: unknown;
+};
+
+/**
+ * Adapts FormController's injected props onto Base UI's compound Select.
+ *
+ * Keeps antd's `options` prop so call sites didn't have to change: Base UI's
+ * `items` takes the same `{label, value}` shape, and supplying it is what makes
+ * `<SelectValue>` render an option's label rather than its raw value.
+ */
+const Select = <TFieldValues extends FieldValues>({
+  name,
+  id,
+  className,
+  placeholder,
+  options = [],
+  disabled,
+  value,
+  onChange,
+  onBlur,
+  errormessage,
+  hasError: _hasError,
+  defaultValue: _defaultValue,
+}: SelectProps<TFieldValues>) => (
+  <SelectRoot
+    items={options}
+    name={name}
+    id={id}
+    disabled={disabled}
+    // react-hook-form seeds these fields with ''. Base UI needs null to show
+    // the placeholder, since '' is a value that matches no item.
+    value={value ? value : null}
+    // Base UI calls this with (value, eventDetails); rhf's onChange reads the
+    // first argument, so keep it to one.
+    onValueChange={(next) => onChange?.(next as string)}
+  >
+    <SelectTrigger
+      // SelectRoot renders no DOM element, so blur has to be bound here for
+      // react-hook-form to mark the field touched.
+      onBlur={onBlur}
+      aria-invalid={!!errormessage}
+      // The placeholder is replaced as soon as a value is picked, so the
+      // trigger needs an accessible name that outlives it.
+      aria-label={placeholder}
+      className={clsx('w-full', className)}
+    >
+      <SelectValue placeholder={placeholder} />
+    </SelectTrigger>
+    <SelectContent>
+      {options.map((option) => (
+        <SelectItem key={option.value} value={option.value}>
+          {option.label}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </SelectRoot>
+);
+
+Select.displayName = 'Select';
+
 const Form = <TFieldValues extends FieldValues>({
   children,
   methods,
@@ -169,7 +255,7 @@ const Form = <TFieldValues extends FieldValues>({
     className={clsx(className, !className && 'flex flex-col w-full gap-3')}
     onSubmit={onSubmit}
   >
-    <FormController methods={methods} loggingMode={loggingMode}>
+    <FormController methods={methods}>
       {children}
     </FormController>
     {Boolean(onSubmit) && <input type={'submit'} hidden />}
@@ -198,9 +284,7 @@ Form.Label = Label;
 
 Form.Input = Input;
 
-Form.TextArea = TextArea;
-
-Form.MaskedInput = MaskedInput;
+Form.TextArea = Textarea;
 
 Form.Select = Select;
 

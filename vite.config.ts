@@ -44,12 +44,7 @@ export default defineConfig(({mode}) => {
          * @see https://vitejs.dev/config/dep-optimization-options
          */
         include: [
-          'antd/lib/input',
-          'copy-to-clipboard',
-          'json2mq',
-          'rc-picker/es/generate/dayjs',
           'react-is',
-          'classnames',
           'use-sync-external-store/shim/with-selector',
           'use-sync-external-store/shim',
           'react-router > set-cookie-parser',
