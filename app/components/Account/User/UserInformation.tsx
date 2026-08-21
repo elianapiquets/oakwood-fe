@@ -3,7 +3,7 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import {useForm, type SubmitHandler} from 'react-hook-form';
 import {useFetcher} from 'react-router';
 
-import {Form, createHandledFormElement} from '~/components/ui';
+import {Form2} from '~/components/ui';
 import {BASE_FORM_CONFIG} from '~/lib/form';
 import {
   userSchema,
@@ -36,10 +36,6 @@ type Customer = {
 type UserInformationProps = {
   customer?: Customer | null;
 };
-
-const UserFormItem = createHandledFormElement<typeof Form.Item, UserFormValues>(
-  Form.Item,
-);
 
 function SectionButtons({
   isEditing,
@@ -178,77 +174,76 @@ function UserInformation({customer}: UserInformationProps) {
           }
         </div>
       )}
-      <Form
+      <Form2
         key="info"
-        methods={methodsUser}
         onSubmit={(event) =>
           void methodsUser.handleSubmit(onSubmitUser)(event)
         }
         className="w-full grid grid-cols-2 gap-x-6 gap-y-4 mt-6"
       >
-        <UserFormItem name="firstName">
-          <Form.Input placeholder="FIRST NAME" disabled={!isEditingUser} />
-          <Form.Error />
-        </UserFormItem>
+        <Form2.Item methods={methodsUser} name="firstName">
+          <Form2.Input placeholder="FIRST NAME" disabled={!isEditingUser} />
+          <Form2.Error />
+        </Form2.Item>
 
-        <UserFormItem name="lastName">
-          <Form.Input placeholder="LAST NAME" disabled={!isEditingUser} />
-          <Form.Error />
-        </UserFormItem>
+        <Form2.Item methods={methodsUser} name="lastName">
+          <Form2.Input placeholder="LAST NAME" disabled={!isEditingUser} />
+          <Form2.Error />
+        </Form2.Item>
 
-        <UserFormItem name="address1">
-          <Form.Input
+        <Form2.Item methods={methodsUser} name="address1">
+          <Form2.Input
             placeholder="ADDRESS LINE 1"
             disabled={!isEditingUser}
           />
-          <Form.Error />
-        </UserFormItem>
+          <Form2.Error />
+        </Form2.Item>
 
-        <UserFormItem name="address2">
-          <Form.Input
+        <Form2.Item methods={methodsUser} name="address2">
+          <Form2.Input
             placeholder="APT, SUITE, ETC."
             disabled={!isEditingUser}
           />
-          <Form.Error />
-        </UserFormItem>
+          <Form2.Error />
+        </Form2.Item>
 
-        <UserFormItem name="city">
-          <Form.Input placeholder="CITY" disabled={!isEditingUser} />
-          <Form.Error />
-        </UserFormItem>
+        <Form2.Item methods={methodsUser} name="city">
+          <Form2.Input placeholder="CITY" disabled={!isEditingUser} />
+          <Form2.Error />
+        </Form2.Item>
 
-        <UserFormItem name="zoneCode">
-          <Form.Select
+        <Form2.Item methods={methodsUser} name="zoneCode">
+          <Form2.Select
             placeholder="STATE"
             options={US_STATE_OPTIONS}
             disabled={!isEditingUser}
           />
-          <Form.Error />
-        </UserFormItem>
+          <Form2.Error />
+        </Form2.Item>
 
-        <UserFormItem name="territoryCode">
-          <Form.Select
+        <Form2.Item methods={methodsUser} name="territoryCode">
+          <Form2.Select
             placeholder="COUNTRY"
             options={COUNTRY_OPTIONS}
             disabled={!isEditingUser}
           />
-          <Form.Error />
-        </UserFormItem>
+          <Form2.Error />
+        </Form2.Item>
 
-        <UserFormItem name="zip">
-          <Form.Input placeholder="POSTAL CODE" disabled={!isEditingUser} />
-          <Form.Error />
-        </UserFormItem>
+        <Form2.Item methods={methodsUser} name="zip">
+          <Form2.Input placeholder="POSTAL CODE" disabled={!isEditingUser} />
+          <Form2.Error />
+        </Form2.Item>
 
         <div className="col-span-2">
-          <Form.Input
+          <Form2.Input
             placeholder="EMAIL ADDRESS"
             value={email}
             onChange={() => {}}
             disabled
           />
         </div>
-      </Form>
+      </Form2>
       {isEditingUser && (
         <div className="col-span-2">
           <button

@@ -25,15 +25,13 @@ type FormController2Props<Schema extends RequiredSchema> = {
  * children, so a `Form2.Item` can hold a label, a control and an error message
  * and have each receive what it needs.
  *
- * Two deliberate differences from v1's `FormController`:
+ * `defaultValue` is deliberately not injected: passing it alongside `value`
+ * makes React warn when both land on a DOM input, and `field.value` already
+ * reflects `defaultValues`.
  *
- * 1. **`defaultValue` is not injected.** v1 passed it alongside `value`, which
- *    makes React warn when both land on a DOM input. `field.value` already
- *    reflects `defaultValues`, so there's nothing to add.
- * 2. **`useCheckForProperFormUsage` is not called.** It scans children for
- *    `name` props, which in this model none of them have — it would warn on
- *    every mount that no fields are registered. It also reads `props.name`
- *    unguarded, so a conditional child would crash it.
+ * Note `processChildren` does not recurse — only an Item's direct children are
+ * injected into — and it spreads own props last, so a child that writes its own
+ * `onChange` or `onBlur` in JSX replaces the injected one.
  */
 const FormController2 = <Schema extends RequiredSchema>({
   methods,

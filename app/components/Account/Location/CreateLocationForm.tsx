@@ -20,18 +20,14 @@ export type PaymentTermsOption = {id: string; name: string};
 /**
  * Company location create form, modelled on Shopify admin's "New location".
  *
- * Each card holds its own `<Form as="div">` sharing one `useForm` instance.
- * `FormController` only wraps the *direct* children of a `Form`, so fields have
- * to sit immediately inside one — a single `<Form>` around the whole page would
- * register nothing, since the cards would be in between. `as="div"` keeps the
- * markup valid: only the outer element is a real `<form>`.
+ * `Form2` is only the `<form>` element; each `Form2.Item` binds one field, so
+ * the fields can sit at any depth — inside these cards, in this case — while
+ * still sharing a single `useForm` instance.
  *
- * Hints live *outside* their `Form.Item`. `Form.Item` forwards the
- * injected field props to every element child, so a bare `<p>` inside one would
- * receive `errormessage`, `onChange` and friends as DOM attributes.
- *
- * Checkbox and radio use `Controller` directly — the `Form` compound has no
- * primitive for either.
+ * Hints live *outside* their `Form2.Item`. An Item forwards the injected field
+ * props to every element child, so a bare `<p>` inside one would receive
+ * `errormessage`, `onChange` and friends as DOM attributes. Only field-aware
+ * components belong directly inside an Item.
  *
  * No company id is submitted: the route action reads the company from the
  * signed-in customer's session, so a customer can only add a location to their
