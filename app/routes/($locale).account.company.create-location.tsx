@@ -57,13 +57,16 @@ async function requireCustomerCompany(
   return {
     company: company as {id: string; name: string},
     contactId: contact.id as string,
+    contactEmail:
+      (data?.customer?.emailAddress?.emailAddress as string | undefined) ??
+      null,
   };
 }
 
 export async function loader({context}: Route.LoaderArgs) {
   const {customerAccount, storefront} = context;
 
-  const {company} = await requireCustomerCompany(customerAccount);
+  const {company, contactEmail} = await requireCustomerCompany(customerAccount);
 
   // Fetched, not hardcoded: `companyLocationCreate` needs a real
   // PaymentTermsTemplate gid.
@@ -76,6 +79,7 @@ export async function loader({context}: Route.LoaderArgs) {
 
   return {
     company,
+    contactEmail,
     paymentTermsOptions: paymentTermsOptions.map(({id, name}) => ({id, name})),
     seo,
   };
@@ -180,7 +184,8 @@ export async function action({request, context}: Route.ActionArgs) {
 }
 
 export default function CreateLocationPage() {
-  const {company, paymentTermsOptions} = useLoaderData<typeof loader>();
+  const {company, contactEmail, paymentTermsOptions} =
+    useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
 
   return (
@@ -192,6 +197,7 @@ export default function CreateLocationPage() {
 
       <CreateLocationForm
         companyName={company.name}
+        contactEmail={contactEmail}
         paymentTermsOptions={paymentTermsOptions}
         serverError={actionData?.error ?? null}
       />

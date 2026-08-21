@@ -103,7 +103,7 @@ export default function CompanyPage() {
           <Link
             to="/account/company/create-location"
             prefetch="intent"
-            className="rounded bg-navy px-3 py-1.5 text-sm font-semibold text-white no-underline hover:opacity-90"
+            className="rounded bg-navy px-3 py-1.5 text-sm font-semibold !text-white no-underline hover:opacity-90"
           >
             + Add Location
           </Link>

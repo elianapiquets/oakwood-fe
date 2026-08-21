@@ -6,6 +6,7 @@ import {zodResolver} from '@hookform/resolvers/zod';
 
 import {Checkbox, Form} from '~/components/ui';
 import {CompanyCard} from '~/components/Account/company/CompanyCard';
+import {LOCATION_ADMIN_ROLE} from '~/lib/b2bRoles';
 import {
   AddressDialog,
   formatAddressLines,
@@ -84,10 +85,13 @@ function AddressSummary({
  */
 export function CreateLocationForm({
   companyName,
+  contactEmail,
   paymentTermsOptions,
   serverError,
 }: {
   companyName: string;
+  /** The signed-in customer, who is assigned to the new location. */
+  contactEmail?: string | null;
   paymentTermsOptions: PaymentTermsOption[];
   serverError?: string | null;
 }) {
@@ -253,10 +257,22 @@ export function CreateLocationForm({
         </div>
       </CompanyCard>
 
+      {/* Read-only. Shopify creates a location with no contacts, and a location
+          with no contacts is invisible to the person who made it — so the
+          creator is assigned automatically. Saying so here means the assignment
+          isn't a surprise. Choosing other customers comes later. */}
       <CompanyCard title="Customers" className="mt-6">
-        <div className="px-4 py-4">
-          <p className="text-sm text-slate-400">
-            Assigning customers to a location isn&apos;t wired up yet.
+        <div className="flex flex-col gap-2 px-4 py-4">
+          <p className="text-sm text-slate-700">
+            You&apos;ll be added to this location as{' '}
+            <span className="font-semibold">{LOCATION_ADMIN_ROLE}</span>.
+          </p>
+          {contactEmail ? (
+            <p className="text-sm text-slate-500">{contactEmail}</p>
+          ) : null}
+          <p className="text-xs text-slate-400">
+            Other customers can be added to the location after it&apos;s
+            created.
           </p>
         </div>
       </CompanyCard>
