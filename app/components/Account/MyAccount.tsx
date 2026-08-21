@@ -1,13 +1,8 @@
-import {lazy, Suspense} from 'react';
 import {Form} from 'react-router';
 
-const UserInformation = lazy(() =>
-  import('./User/UserInformation').then((m) => ({default: m.UserInformation})),
-);
+import {UserInformation} from './User/UserInformation';
 
-// const Company = lazy(() =>
-//   import('./Company').then((m) => ({default: m.Company})),
-// );
+// import {Company} from './Company';
 
 type CustomerMetafield = {key: string; value: string} | null;
 
@@ -93,15 +88,13 @@ function MyAccount({customer, allCompanies = []}: MyAccountProps) {
         </Form>
       </div>
 
-      <Suspense fallback={null}>
-        <UserInformation customer={customer} />
-        {/*<Company*/}
-        {/*  customerId={customer?.id}*/}
-        {/*  allCompanies={allCompanies}*/}
-        {/*  companyRoles={companyRoles}*/}
-        {/*  savedCompanyId={initialCompanyId}*/}
-        {/*/>*/}
-      </Suspense>
+      <UserInformation customer={customer} />
+      {/*<Company*/}
+      {/*  customerId={customer?.id}*/}
+      {/*  allCompanies={allCompanies}*/}
+      {/*  companyRoles={companyRoles}*/}
+      {/*  savedCompanyId={initialCompanyId}*/}
+      {/*/>*/}
     </div>
   );
 }
